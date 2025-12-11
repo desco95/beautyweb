@@ -25,37 +25,46 @@ function showAdminView(view) {
     if (view === "proximas") {
         loadPendingAppointments();
     }
-
 }
 
 showAdminView("inicio");
-
 
 /* ==========================
    LOAD DATA (localStorage backup)
 ========================== */
 let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
 
-
 /* ==========================
    PENDING + CONFIRMED APPOINTMENTS
 ========================== */
 async function loadPendingAppointments() {
-
     const pending = document.getElementById("pending-list");
     const confirmed = document.getElementById("confirmed-list");
 
-    pending.innerHTML = "";
-    confirmed.innerHTML = "";
+    pending.innerHTML = "<p>Cargando...</p>";
+    confirmed.innerHTML = "<p>Cargando...</p>";
 
     try {
         const response = await fetch(`${window.API_URL}/citas/pendientes`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const citas = await response.json();
 
-        if (!Array.isArray(citas)) return;
+        console.log("Citas recibidas:", citas); // Para debug
+
+        pending.innerHTML = "";
+        confirmed.innerHTML = "";
+
+        if (!Array.isArray(citas) || citas.length === 0) {
+            pending.innerHTML = "<p>No hay citas pendientes</p>";
+            confirmed.innerHTML = "<p>No hay citas confirmadas</p>";
+            return;
+        }
 
         citas.forEach(cita => {
-
             const card = document.createElement("div");
             card.classList.add("appointment-card");
 
@@ -74,26 +83,30 @@ async function loadPendingAppointments() {
             `;
 
             if (cita.estado === "Pendiente") {
-
                 const actions = document.createElement("div");
                 actions.classList.add("card-actions");
 
-                actions.innerHTML = `
-                    <button class="btn-confirmar">Confirmar</button>
-                    <button class="btn-rechazar">Rechazar</button>
-                `;
-
-                actions.querySelector(".btn-confirmar").onclick = async () => {
-                    await updateCitaEstado(cita.id, "Confirmada");
-                    loadPendingAppointments();
+                const btnConfirmar = document.createElement("button");
+                btnConfirmar.className = "btn-confirmar";
+                btnConfirmar.textContent = "Confirmar";
+                btnConfirmar.onclick = async () => {
+                    console.log("Confirmando cita ID:", cita.id);
+                    await confirmarCita(cita.id);
                 };
 
-                actions.querySelector(".btn-rechazar").onclick = async () => {
+                const btnRechazar = document.createElement("button");
+                btnRechazar.className = "btn-rechazar";
+                btnRechazar.textContent = "Rechazar";
+                btnRechazar.onclick = async () => {
                     const reason = prompt("Motivo del rechazo:");
-                    await updateCitaEstado(cita.id, "Cancelada", reason);
-                    loadPendingAppointments();
+                    if (reason) {
+                        console.log("Rechazando cita ID:", cita.id);
+                        await rechazarCita(cita.id, reason);
+                    }
                 };
 
+                actions.appendChild(btnConfirmar);
+                actions.appendChild(btnRechazar);
                 card.appendChild(actions);
                 pending.appendChild(card);
             }
@@ -103,19 +116,75 @@ async function loadPendingAppointments() {
             }
         });
 
+        if (pending.innerHTML === "") {
+            pending.innerHTML = "<p>No hay citas pendientes</p>";
+        }
+        
+        if (confirmed.innerHTML === "") {
+            confirmed.innerHTML = "<p>No hay citas confirmadas</p>";
+        }
+
     } catch (error) {
         console.error("ERROR AL CARGAR CITAS:", error);
+        pending.innerHTML = `<p style="color: red;">Error al cargar citas: ${error.message}</p>`;
+        confirmed.innerHTML = "";
     }
 }
 
-async function updateCitaEstado(id, estado, motivo = null) {
-    await fetch(`${window.API_URL}/citas/${estado === 'Confirmada' ? 'confirmar' : 'rechazar'}/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ razon: motivo })
-    });
+async function confirmarCita(id) {
+    try {
+        console.log("Enviando confirmación para cita ID:", id);
+        
+        const response = await fetch(`${window.API_URL}/citas/confirmar/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        const data = await response.json();
+        console.log("Respuesta del servidor:", data);
+
+        if (response.ok) {
+            alert("✓ Cita confirmada");
+            loadPendingAppointments();
+            loadPendingCount();
+            loadTodayCount();
+            loadConfirmedMonthCount();
+        } else {
+            alert("Error: " + (data.error || "No se pudo confirmar"));
+        }
+
+    } catch (error) {
+        console.error("Error al confirmar:", error);
+        alert("Error de conexión: " + error.message);
+    }
 }
 
+async function rechazarCita(id, motivo) {
+    try {
+        console.log("Enviando rechazo para cita ID:", id);
+        
+        const response = await fetch(`${window.API_URL}/citas/rechazar/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ razon: motivo })
+        });
+
+        const data = await response.json();
+        console.log("Respuesta del servidor:", data);
+
+        if (response.ok) {
+            alert("✓ Cita rechazada");
+            loadPendingAppointments();
+            loadPendingCount();
+        } else {
+            alert("Error: " + (data.error || "No se pudo rechazar"));
+        }
+
+    } catch (error) {
+        console.error("Error al rechazar:", error);
+        alert("Error de conexión: " + error.message);
+    }
+}
 
 /* ==========================
    STAFF LIST
@@ -151,7 +220,6 @@ async function loadStaff() {
     }
 }
 
-
 /* ==========================
    ADD STYLIST
 ========================== */
@@ -179,7 +247,6 @@ async function addStylist() {
         console.error("Error añadiendo estilista:", error);
     }
 }
-
 
 /* ==========================
    DELETE STYLIST
@@ -209,8 +276,6 @@ async function deleteStylist() {
     }
 }
 
-
-
 /* ===================================================
    CARGAR ESTILISTAS SOLO PARA BLOQUEOS
 =================================================== */
@@ -218,15 +283,11 @@ async function loadBlockStylists() {
     try {
         const response = await fetch(`${window.API_URL}/admin/staff`);
         const staff = await response.json();
-
         generateBlockCards(staff);
-
     } catch (error) {
         console.error("Error cargando estilistas para bloqueo:", error);
     }
 }
-
-
 
 /* ===================================================
    CLICK EN BOTÓN BLOQUEAR HORARIO
@@ -294,7 +355,6 @@ document.addEventListener("click", async (e) => {
     boton.textContent = "Bloquear";
 });
 
-
 /* ===================================================
    GENERAR TARJETAS DE BLOQUEO
 =================================================== */
@@ -328,7 +388,6 @@ function generateBlockCards(stylists) {
             <input type="text" class="reason" placeholder="Motivo">
 
             <button class="btn-block" data-id="${est.id_estilista}">Bloquear</button>
-
         `;
 
         container.appendChild(card);
@@ -337,7 +396,6 @@ function generateBlockCards(stylists) {
 
 loadTodayCount();
 
-//citas hoy
 async function loadTodayCount() {
     try {
         const res = await fetch(`${window.API_URL}/citas/hoy/count`);
@@ -375,6 +433,5 @@ async function loadConfirmedMonthCount() {
         console.error("Error al cargar citas confirmadas del mes:", err);
     }
 }
-
 
 
