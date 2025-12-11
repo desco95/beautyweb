@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - BeautyWeb</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="stylesAdmin.css">
+</head>
+
+<body>
+
+    <!-- ========== SIDEBAR ========== -->
+    <div class="sidebar">
+        <h2>BeautyWeb Admin</h2>
+
+        <button id="btn-inicio" class="nav-btn active" onclick="showAdminView('inicio')">Inicio</button>
+        <button id="btn-proximas" class="nav-btn" onclick="showAdminView('proximas')">Próximas citas</button>
+        <button id="btn-horarios" class="nav-btn" onclick="showAdminView('horarios')">Gestión de horarios</button>
+        <button id="btn-personal" class="nav-btn" onclick="showAdminView('personal')">Personal disponible</button>
+
+        <div class="sidebar-bottom">
+            <button class="logout-btn" onclick="window.location.href='index.html'">Regresar</button>
+        </div>
+    </div>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <div class="main">
+
+        <!-- ======================================
+                INICIO
+        ======================================= -->
+        <div id="inicio" class="view active">
+            <h1>Panel principal</h1>
+
+            <div class="statcard-block">
+                <div class="stat-card">
+                    <div id="today-count" class="stat-number">0</div>
+                    <div class="stat-label">Citas hoy</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-number" id="pendientes-count">0</div>
+                    <div class="stat-label">Pendientes por confirmar</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-number" id="month-confirmed-count">0</div>
+                    <div class="stat-label">Citas este mes</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-sat">98%</div>
+                    <div class="stat-label">Satisfacción</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================
+                PRÓXIMAS CITAS
+        ======================================= -->
+    <div id="proximas" class="view">
+        <h1>Próximas citas</h1>
+
+        <!-- Pendientes -->
+        <div class="card">
+            <h2>Pendientes por confirmar</h2>
+            <div id="pending-list"></div>
+
+        </div> <!-- ✔️ CIERRE CORRECTO DEL CARD GRANDE -->
+
+        <!-- Citas confirmadas -->
+        <div class="card" style="margin-top: 2rem;">
+            <h2>Citas confirmadas</h2>
+            <div id="confirmed-list"></div>
+        </div>
+    </div>
+
+    <!-- ======================================
+                GESTIÓN DE HORARIOS
+        ======================================= -->
+    <div id="horarios" class="view">
+        <h1>Gestión de horarios</h1>
+
+        <!-- Acciones -->
+        <div class="horarios-actions">
+
+            <!-- Añadir estilista -->
+            <div class="mini-card">
+                <h3>Añadir estilista</h3>
+                <input type="text" id="new-stylist-name" placeholder="Nombre del estilista">
+                <button onclick="addStylist()">Agregar</button>
+            </div>
+
+            <!-- Eliminar estilista -->
+            <div class="mini-card">
+                <h3>Eliminar estilista</h3>
+                <input id="delete-stylist-id" type="number" placeholder="ID del estilista">
+                <button onclick="deleteStylist()">Eliminar</button>
+            </div>
+
+        </div>
+
+        <!-- Tarjetas de horarios -->
+        <div class="block-card">
+            <h2 class="section-title">Bloqueo de Horarios</h2>
+
+            <!-- ESTE es el contenedor que JS usa para insertar una card por estilista -->
+            <div id="block-stylists-container" class="block-cards-container"></div>
+        </div>
+
+
+
+    </div>
+
+    <!-- ======================================
+                PERSONAL DISPONIBLE
+        ======================================= -->
+    <div id="personal" class="view">
+        <h1>Personal disponible hoy</h1>
+        <div id="staffListado"></div>
+
+
+        <div id="staff-list" style="margin-top: 1rem;"></div>
+    </div>
+
+    </div>
+
+    <!-- ========== SCRIPTS ========== -->
+    <script src="config.js"></script>
+    <script src="admin.js"></script>
+
+</body>
+
+</html>

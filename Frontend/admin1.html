@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeautyWeb - Sistema de Gestión de Citas</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 105, 180, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(219, 112, 147, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(255, 182, 193, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .header {
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 105, 180, 0.2);
+            padding: 2rem 3rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.3);
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 105, 180, 0.1);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 105, 180, 0.2);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .nav {
+            background: rgba(18, 18, 18, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 0;
+            border-bottom: 1px solid rgba(255, 105, 180, 0.1);
+            position: sticky;
+            top: 88px;
+            z-index: 99;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0;
+            padding: 0 3rem;
+        }
+
+        .nav button {
+            background: none;
+            border: none;
+            padding: 1.25rem 2rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .nav button::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #ff69b4, #ff1493);
+            transition: width 0.3s;
+        }
+
+        .nav button:hover {
+            color: #ff69b4;
+        }
+
+        .nav button.active {
+            color: #fff;
+        }
+
+        .nav button.active::before {
+            width: 80%;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+
+        .hero {
+            text-align: center;
+            padding: 5rem 0;
+            position: relative;
+        }
+
+        .hero h2 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #ff69b4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+            color: white;
+            border: none;
+            padding: 1.2rem 3rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 10px 40px rgba(255, 20, 147, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 50px rgba(255, 20, 147, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 105, 180, 0.1);
+            color: #ff69b4;
+            border: 1px solid rgba(255, 105, 180, 0.3);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 105, 180, 0.2);
+        }
+
+        .card {
+            background: rgba(18, 18, 18, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 105, 180, 0.2);
+            margin-bottom: 2rem;
+            transition: all 0.4s;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 105, 180, 0.4);
+            box-shadow: 0 20px 60px rgba(255, 20, 147, 0.2);
+        }
+
+        .card h2 {
+            color: #ff69b4;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .feature {
+            background: rgba(18, 18, 18, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 105, 180, 0.2);
+            padding: 3rem 2rem;
+            border-radius: 25px;
+            text-align: center;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff69b4, #ff1493);
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+
+        .feature:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 105, 180, 0.5);
+            box-shadow: 0 20px 60px rgba(255, 20, 147, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            filter: grayscale(0.3);
+        }
+
+        .feature h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .feature p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 105, 180, 0.2);
+            border-radius: 15px;
+            font-size: 1rem;
+            color: #fff;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #ff69b4;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 4px rgba(255, 105, 180, 0.1);
+        }
+
+        .form-group select option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .appointments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .appointment-card {
+            background: rgba(18, 18, 18, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 105, 180, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .appointment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff69b4, #ff1493);
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+
+        .appointment-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .appointment-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 105, 180, 0.5);
+            box-shadow: 0 20px 60px rgba(255, 20, 147, 0.3);
+        }
+
+        .appointment-card h3 {
+            color: #fff;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .appointment-info {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status.pending {
+            background: rgba(255, 152, 0, 0.15);
+            color: #ffb74d;
+            border: 1px solid rgba(255, 152, 0, 0.3);
+        }
+
+        .status.confirmed {
+            background: rgba(76, 175, 80, 0.15);
+            color: #81c784;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .status.cancelled {
+            background: rgba(244, 67, 54, 0.15);
+            color: #e57373;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 105, 180, 0.1);
+            border: 1px solid rgba(255, 105, 180, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 105, 180, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1.5rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-content {
+                flex-direction: column;
+                padding: 0;
+            }
+
+            .nav button {
+                padding: 1rem;
+                width: 100%;
+                text-align: left;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+
+            .hero h2 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .appointments-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 105, 180, 0.1);
+            animation: float 20s infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            top: 60%;
+            right: 10%;
+            animation-delay: 5s;
+        }
+
+        .shape:nth-child(3) {
+            width: 150px;
+            height: 150px;
+            bottom: 10%;
+            left: 50%;
+            animation-delay: 10s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(30px, -30px) scale(1.1);
+            }
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">💅</div>
+                <h1>BeautyWeb</h1>
+            </div>
+            <div class="user-info">
+                <div class="avatar">MC</div>
+                <span>Iniciar sesión</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="nav-content">
+            <button class="active" onclick="showView('home')">🏠 Inicio</button>
+            <button onclick="showView('book')">📅 Agendar Cita</button>
+            <button onclick="showView('appointments')">📋 Mis Citas</button>
+            <button onclick="showView('history')">🕐 Historial</button>
+            <button onclick="showView('admin')">⚙️ Administración</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Vista de Inicio -->
+        <div id="home" class="view active">
+            <div class="hero">
+                <h2>Tu belleza,<br>tu tiempo,<br>tu manera</h2>
+                <p>Gestiona tus citas de belleza con elegancia y simplicidad</p>
+                <button class="btn" onclick="showView('book')">Agendar mi cita →</button>
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Disponible 24/7</h3>
+                    <p>Agenda en cualquier momento desde cualquier dispositivo con total libertad</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Sin Esperas</h3>
+                    <p>Elimina las filas y optimiza tu tiempo con citas perfectamente programadas</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">✨</div>
+                    <h3>Personalizado</h3>
+                    <p>Guarda tu estilista favorito y preferencias para una experiencia única</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔔</div>
+                    <h3>Recordatorios</h3>
+                    <p>Notificaciones inteligentes para que nunca olvides tus citas importantes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista de Agendar Cita -->
+        <div id="book" class="view">
+            <div class="card">
+                <h2>Agendar Nueva Cita</h2>
+                <form onsubmit="bookAppointment(event)">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <input type="text" placeholder="Tu nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="tel" placeholder="10 dígitos" required>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="form-group">
+                            <label>Servicio</label>
+                            <select required>
+                                <option value="">Selecciona un servicio</option>
+                                <option>Corte de cabello - $250</option>
+                                <option>Peinado elegante - $350</option>
+                                <option>Tinte completo - $800</option>
+                                <option>Manicure - $200</option>
+                                <option>Pedicure - $250</option>
+                                <option>Maquillaje profesional - $450</option>
+                                <option>Tratamiento facial - $600</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Estilista Preferido</label>
+                            <select required>
+                                <option value="">Selecciona un estilista</option>
+                                <option>María González - Especialista en color</option>
+                                <option>Ana Martínez - Manicure y uñas</option>
+                                <option>Laura Rodríguez - Cortes modernos</option>
+                                <option>Carmen López - Maquillaje</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            <input type="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Hora</label>
+                            <select required>
+                                <option value="">Selecciona un horario</option>
+                                <option>09:00 AM</option>
+                                <option>10:00 AM</option>
+                                <option>11:00 AM</option>
+                                <option>12:00 PM</option>
+                                <option>01:00 PM</option>
+                                <option>02:00 PM</option>
+                                <option>03:00 PM</option>
+                                <option>04:00 PM</option>
+                                <option>05:00 PM</option>
+                                <option>06:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notas adicionales (opcional)</label>
+                        <textarea rows="3" placeholder="Comparte alguna preferencia especial..."></textarea>
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Confirmar Cita</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Vista de Mis Citas -->
+        <div id="appointments" class="view">
+            <div class="card">
+                <h2>Mis Citas Próximas</h2>
+                <div class="appointments-grid">
+                    <div class="appointment-card">
+                        <h3>Corte de Cabello</h3>
+                        <div class="appointment-info">👤 María González</div>
+                        <div class="appointment-info">📅 15 de Octubre, 2025</div>
+                        <div class="appointment-info">⏰ 10:00 AM - 11:00 AM</div>
+                        <div class="appointment-info">💰 $250.00</div>
+                        <span class="status pending">Pendiente</span>
+                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                            <button class="btn btn-secondary" style="flex: 1;">Modificar</button>
+                            <button class="btn btn-secondary" style="flex: 1;">Cancelar</button>
+                        </div>
+                    </div>
+                    <div class="appointment-card">
+                        <h3>Manicure y Pedicure</h3>
+                        <div class="appointment-info">👤 Ana Martínez</div>
+                        <div class="appointment-info">📅 18 de Octubre, 2025</div>
+                        <div class="appointment-info">⏰ 02:00 PM - 03:30 PM</div>
+                        <div class="appointment-info">💰 $450.00</div>
+                        <span class="status confirmed">Confirmada</span>
+                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                            <button class="btn btn-secondary" style="flex: 1;">Modificar</button>
+                            <button class="btn btn-secondary" style="flex: 1;">Cancelar</button>
+                        </div>
+                    </div>
+                    <div class="appointment-card">
+                        <h3>Maquillaje Profesional</h3>
+                        <div class="appointment-info">👤 Carmen López</div>
+                        <div class="appointment-info">📅 22 de Octubre, 2025</div>
+                        <div class="appointment-info">⏰ 05:00 PM - 06:00 PM</div>
+                        <div class="appointment-info">💰 $450.00</div>
+                        <span class="status confirmed">Confirmada</span>
+                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                            <button class="btn btn-secondary" style="flex: 1;">Modificar</button>
+                            <button class="btn btn-secondary" style="flex: 1;">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista de Historial -->
+        <div id="history" class="view">
+            <div class="card">
+                <h2>Historial de Citas</h2>
+                <div class="appointments-grid">
+                    <div class="appointment-card">
+                        <h3>Tinte y Corte</h3>
+                        <div class="appointment-info">👤 Laura Rodríguez</div>
+                        <div class="appointment-info">📅 05 de Octubre, 2025</div>
+                        <div class="appointment-info">⏰ 11:00 AM - 01:30 PM</div>
+                        <div class="appointment-info">💰 $1,050.00</div>
+                        <span class="status confirmed">Completada</span>
+                    </div>
+                    <div class="appointment-card">
+                        <h3>Peinado para Evento</h3>
+                        <div class="appointment-info">👤 María González</div>
+                        <div class="appointment-info">📅 28 de Septiembre, 2025</div>
+                        <div class="appointment-info">⏰ 04:00 PM - 05:00 PM</div>
+                        <div class="appointment-info">💰 $350.00</div>
+                        <span class="status confirmed">Completada</span>
+                    </div>
+                    <div class="appointment-card">
+                        <h3>Manicure</h3>
+                        <div class="appointment-info">👤 Carmen López</div>
+                        <div class="appointment-info">📅 20 de Septiembre, 2025</div>
+                        <div class="appointment-info">⏰ 03:30 PM - 04:30 PM</div>
+                        <div class="appointment-info">💰 $200.00</div>
+                        <span class="status cancelled">Cancelada</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista de Administración -->
+        <div id="admin" class="view">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">24</div>
+                    <div class="stat-label">Citas Hoy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Pendientes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">156</div>
+                    <div class="stat-label">Este Mes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">94%</div>
+                    <div class="stat-label">Satisfacción</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Citas Pendientes de Confirmación</h2>
+                <div class="appointments-grid">
+                    <div class="appointment-card">
+                        <h3>Cliente: Ana Pérez</h3>
+                        <div class="appointment-info">💇 Corte de cabello</div>
+                        <div class="appointment-info">👤 María González</div>
+                        <div class="appointment-info">📅 16 de Octubre, 2025</div>
+                        <div class="appointment-info">⏰ 09:00 AM - 10:00 AM</div>
+                        <div class="appointment-info">💰 $250.00</div>
+                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                            <button class="btn" style="flex: 1;">✓ Confirmar</button>
+                            <button class="btn btn-secondary" style="flex: 1;">✗ Rechazar</button>
+                        </div>
+                    </div>
+                    <div class="appointment-card">
+                        <h3>Cliente: Roberto Sánchez</h3>
+                        <div class="appointment-info">💅 Manicure</div>
+                        <div class="appointment-info">👤 Carmen López</div>
+                        <div class="appointment-info">📅 16 de Octubre, 2025</div>
+                        <div class="appointment-info">⏰ 11:00 AM - 12:00 PM</div>
+                        <div class="appointment-info">💰 $200.00</div>
+                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                            <button class="btn" style="flex: 1;">✓ Confirmar</button>
+                            <button class="btn btn-secondary" style="flex: 1;">✗ Rechazar</button>
+                        </div>
+                    </div>
+                    <div class="appointment-card">
+                        <h3>Cliente: Laura Jiménez</h3>
+                        <div class="appointment-info">🎨 Tinte completo</div>
+                        <div class="appointment-info">👤 Laura Rodríguez</div>
+                        <div class="appointment-info">📅 17 de Octubre, 2025</div>
+                        <div class="appointment-info">⏰ 10:00 AM - 12:30 PM</div>
+                        <div class="appointment-info">💰 $800.00</div>
+                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                            <button class="btn" style="flex: 1;">✓ Confirmar</button>
+                            <button class="btn btn-secondary" style="flex: 1;">✗ Rechazar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 2rem;">
+                <h2>Gestión de Horarios</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="form-group">
+                        <label>Seleccionar Estilista</label>
+                        <select>
+                            <option>María González</option>
+                            <option>Ana Martínez</option>
+                            <option>Laura Rodríguez</option>
+                            <option>Carmen López</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Horario a Bloquear</label>
+                    <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: center;">
+                        <input type="time">
+                        <span style="color: rgba(255,255,255,0.6);">hasta</span>
+                        <input type="time">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Motivo del Bloqueo</label>
+                    <input type="text" placeholder="Ej: Descanso, Capacitación, etc.">
+                </div>
+                <button class="btn" style="width: 100%;">Bloquear Horario</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showView(viewId) {
+            const views = document.querySelectorAll('.view');
+            views.forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+
+            const buttons = document.querySelectorAll('.nav button');
+            buttons.forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function bookAppointment(e) {
+            e.preventDefault();
+            alert('✨ ¡Cita agendada exitosamente!\n\nEspera la confirmación del salón en los próximos minutos.');
+            showView('appointments');
+        }
+    </script>
+</body>
+</html>

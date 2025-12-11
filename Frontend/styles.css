@@ -1,0 +1,734 @@
+/* ================================
+   GENERAL
+================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #ffffff, #f7f7f7, #ececec);
+    min-height: 100vh;
+    color: #333;
+    overflow-x: hidden;
+}
+
+/* SHAPES flotantes */
+.floating-shapes {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200vh; /* 🔥 más alto que la pantalla */
+    pointer-events: none;
+    overflow: visible;
+    z-index: -1;
+}
+
+.shape {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background: rgba(254, 27, 175, 0.366); 
+    border-radius: 50%;
+    animation: floatShape 100s infinite linear;
+}
+
+
+/* Movimiento más calmado */
+@keyframes floatShape {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-250vh) rotate(360deg); }
+}
+
+
+
+/* ================================
+   HEADER (blanco sólido)
+================================ */
+.header {
+    width: 100%;
+    padding: 1rem 2rem;
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.header-content {
+    max-width: 1100px;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-icon {
+    font-size: 1.8rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+}
+
+.avatar {
+    padding-right: 0%;
+    width: 50px;            /* Tamaño del círculo */
+    height: 50px;           /* Alto del círculo */
+    border-radius: 50%;     /* Hace que sea un círculo */
+    overflow: hidden;       /* Para recortar la imagen a un círculo */
+    cursor: pointer;
+    display: inline-table;
+    justify-content: center;
+    align-items: center;
+}
+
+.avatar img {
+    width: 100%;            /* La imagen ocupa todo el contenedor */
+    height: 100%;           /* Mantiene proporción del círculo */
+    object-fit: cover;      /* Recorta y centra la imagen dentro del círculo */
+}
+
+
+/* --------------------
+   NAV BLANCO
+--------------------- */
+
+.nav {
+    width: 100%;
+    background: #ffffff;
+    padding: 1rem 0;
+    position: relative;
+    z-index: 9999;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.nav-content {
+    display: flex;
+    gap: 1.2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.nav-content button {
+    background: transparent;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    color: #333;
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 0.95rem;
+    position: relative;
+    transition: 0.25s;
+}
+
+.nav-content button:hover {
+    color: #ff69b4;
+}
+
+/* Línea rosa */
+.nav-content button:hover::after {
+    width: 100%;
+}
+
+.nav-content button::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 0%;
+    height: 3px;
+    background: #ff69b4;
+    border-radius: 4px;
+    transition: 0.25s ease;
+}
+
+.nav-content .active {
+    color: #ff69b4;
+}
+
+.nav-content .active::after {
+    width: 100%;
+}
+
+/* ================================
+   CONTAINER / VIEWS
+================================ */
+.container {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.view {
+    display: none;
+    animation: fade 0.4s ease;
+}
+
+.view.active {
+    display: block;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================================
+   HERO (Glass blanco)
+================================ */
+.hero {
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(16px);
+    border-radius: 18px;
+    margin-bottom: 2rem;
+    text-align: center;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+}
+
+.hero h2 {
+    font-size: 2.3rem;
+    margin-bottom: 0.8rem;
+    color: #333;
+}
+
+.btn {
+    background: #ff69b4;
+    padding: 0.85rem 1.3rem;
+    border: none;
+    color: white;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    background: #ff80c5;
+}
+
+/* ================================
+   CARDS (Glass blanco)
+================================ */
+.card {
+    background: rgba(255, 255, 255, 0.55);
+    padding: 1.8rem;
+    border-radius: 18px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+    margin-bottom: 2rem;
+}
+
+.feature {
+    background: rgba(255, 255, 255, 0.55);
+    padding: 1.5rem;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+}
+
+/* ================================
+   FORMS
+================================ */
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 0.9rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 105, 180, 0.25);
+    background: rgba(255, 255, 255, 0.55);
+    color: #333;
+    font-size: 0.95rem;
+}
+
+/* ================================
+   APPOINTMENTS
+================================ */
+.appointment-card {
+    background: rgba(255, 255, 255, 0.55);
+    padding: 1.3rem;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    border-left: 4px solid #ff69b4;
+    color: #333;
+}
+
+/* ================================
+   MODALS (Glass blanco)
+================================ */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 105, 180, 0.3);
+    border-radius: 20px;
+    padding: 2rem;
+    width: 350px;
+    color: #333;
+    box-shadow: 0 0 20px rgba(255, 105, 180, 0.25);
+    transform: scale(0.7);
+    opacity: 0;
+    animation: popIn 0.3s ease forwards;
+}
+
+.modal-content input {
+    background: rgba(255, 255, 255, 0.6);
+    color: #333;
+    border: 1px solid rgba(255, 105, 180, 0.4);
+}
+
+.btn-pink {
+    width: 100%;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #ff4aa7, #ff2d7b);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* =====================
+           CARRUSEL
+====================== */
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.7);
+    border: none;
+    padding: 0.7rem;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    backdrop-filter: blur(10px);
+}
+
+.carousel-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.prev {
+    left: 10px;
+}
+
+.next {
+    right: 10px;
+}
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 260px;
+    overflow: hidden;
+}
+
+.carousel {
+    display: flex;
+    flex-wrap: nowrap;     
+    width: 100%;
+    height: 100%;
+    transition: transform 1s ease-in-out;
+}
+
+.carousel img {
+    width: 100%;
+    flex: 0 0 100%;       
+    height: 260px;
+    object-fit: cover;    
+}
+
+
+.map-box iframe {
+    width: 100%;
+    height: 330px;
+    border: none;
+    border-radius: 16px;
+}
+
+/* ==========================
+   BOTONES INICIAR/REGISTRARSE
+========================== */
+.user-info-btn button {
+    padding: 10px 15px;
+    border: none;
+    background: #fff;
+    color: #ff69b4;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.user-label {
+    padding: 10px 15px;
+    border: none;
+    background: #fff;
+    color: #0f0008;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.user-info-btn button:hover {
+    background: #ffe6f0;
+}
+
+/* ================================
+   MODAL LOGIN & REGISTER REFINED
+================================ */
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.45);
+    justify-content: center;
+    align-items: center;
+    z-index: 999999;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    width: 350px;
+    background: rgba(255, 255, 255, 0.75);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 105, 180, 0.25);
+    box-shadow: 0 0 25px rgba(255, 105, 180, 0.25);
+    text-align: center;
+    animation: modalPop 0.3s ease forwards;
+    transform: scale(0.8);
+    opacity: 0;
+}
+
+@keyframes modalPop {
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-content h2 {
+    margin-bottom: 1rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.modal-content input {
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.65);
+    border: 1px solid rgba(255, 105, 180, 0.3);
+}
+
+.modal-content button {
+    margin-top: 0.5rem;
+}
+
+/* ======================================
+   AGENDAR CITA - FORMULARIO ESTÉTICO
+====================================== */
+
+.agendar-container {
+    max-width: 450px;           /* 🔥 Más delgado */
+    margin: 2rem auto;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(14px);
+    border-radius: 22px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+    animation: fade 0.3s ease;
+}
+
+.agendar-container h3 {
+    text-align: center;
+    color: #ff2d7b;
+    margin-bottom: 1.2rem;
+    font-weight: 600;
+}
+
+.agendar-container label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: block;
+    color: #333;
+}
+
+.agendar-container input,
+.agendar-container select,
+.agendar-container textarea {
+    width: 100%;
+    padding: 0.9rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 105, 180, 0.25);
+    background: rgba(255, 255, 255, 0.7);
+    margin-bottom: 1.1rem;
+    font-size: 0.95rem;
+    transition: 0.2s;
+}
+
+.agendar-container input:focus,
+.agendar-container select:focus,
+.agendar-container textarea:focus {
+    border-color: #ff69b4;
+    box-shadow: 0 0 6px rgba(255, 105, 180, 0.4);
+    outline: none;
+}
+
+.btn-agendar {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #ff4aa7, #ff2d7b);
+    border: none;
+    border-radius: 14px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.25s;
+}
+
+.btn-agendar:hover {
+    background: linear-gradient(135deg, #ff6fbb, #ff3d8d);
+}
+
+/* =============================================
+   FORMULARIO DE AGENDAR CITA - LOOK ESTÉTICO
+============================================= */
+
+.form-card {
+    max-width: 480px;                        /* 🔥 Mucho más delgado */
+    margin: 0 auto;                          /* Centrado */
+    padding: 2rem;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.7);    /* efecto glass suave */
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Título centrado */
+.form-card h2 {
+    text-align: center;
+    color: #ff2d7b;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+/* Inputs y selects */
+.form-card input,
+.form-card select,
+.form-card textarea {
+    width: 100%;
+    padding: 0.9rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 105, 180, 0.3);
+    background: rgba(255, 255, 255, 0.75);
+    font-size: 0.95rem;
+    transition: 0.25s ease;
+}
+
+/* Hover/focus */
+.form-card input:focus,
+.form-card select:focus,
+.form-card textarea:focus {
+    border-color: #ff69b4;
+    box-shadow: 0 0 8px rgba(255, 105, 180, 0.4);
+    outline: none;
+}
+
+/* Grids mejor ajustados */
+.form-card .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* Espaciado entre elementos */
+.form-card .form-group {
+    margin-bottom: 1rem;
+}
+
+/* Botón */
+.form-card .btn {
+    margin-top: 0.5rem;
+    padding: 0.9rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #ff4aa7, #ff2d7b);
+    color: white;
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+.form-card .btn:hover {
+    background: linear-gradient(135deg, #ff6fbb, #ff3d8d);
+    transform: translateY(-1px);
+}
+
+/* ========================================
+   SECCIÓN SERVICIOS
+======================================== */
+
+/* Card individual */
+.service-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(14px);
+    border-radius: 16px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(255, 105, 180, 0.25);
+    transition: transform 0.25s ease;
+}
+
+.service-card {
+    height: 260px; /* 🔥 altura más grande */
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(255,105,180,0.25);
+    text-align: center;
+}
+
+
+.service-card:hover {
+    transform: translateY(-6px);
+}
+
+/* Imagen del servicio */
+.service-card img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 0.6rem;
+}
+
+/* Título */
+.service-card h3 {
+    color: #ff2d7b;
+    margin-bottom: 0.4rem;
+    font-size: 1.05rem;
+}
+
+/* Descripción */
+.service-card p {
+    font-size: 0.85rem;
+    color: #555;
+}
+
+/* Botón "Ver más" */
+#toggle-services-btn {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 12px;
+    background: #ff69b4;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.25s;
+}
+
+#toggle-services-btn:hover {
+    background: #ff85c8;
+}
+
+.servicios-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* CONTENEDOR COLAPSADO */
+.servicios-container {
+    max-height: 270px;         /* 🔥 Solo muestra 6–7 cards */
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+/* EXPANDIDO (lo activa JS) */
+.servicios-container.expanded {
+    max-height: 2000px;        /* suficiente para las 14 cards */
+}
+
+/* BOTÓN BONITO */
+#toggle-services-btn {
+    width: 25%;
+    margin-top: 1rem;
+    padding: 12px;
+    background: #ff69b4;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    display: block;
+}
+
+#toggle-services-btn:hover {
+    background: #ff85c8;
+}
+
+.appointment-card {
+    background: #ffffff;
+    padding: 18px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.12);
+    border-left: 6px solid #ff69b4; /* color rosita */
+    transition: transform .2s ease;
+}
+
+.appointment-card:hover {
+    transform: translateY(-3px);
+}
+
+.appointment-card h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #ff3f8c; 
+}
+
+.appointment-card p {
+    margin: 4px 0;
+    font-size: 15px;
+    color: #444;
+}

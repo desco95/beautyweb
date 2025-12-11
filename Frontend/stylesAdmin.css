@@ -1,0 +1,626 @@
+/* ============================================
+   ESTILO GENERAL
+============================================ */
+body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    background: #ffffff; /* FONDO AHORA BLANCO */
+    color: #222;
+}
+
+/* ============================================
+   SIDEBAR
+============================================ */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 230px;
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.08);
+    padding: 30px 20px;
+    box-sizing: border-box;
+    z-index: 100; /* 🔥 evita que tape contenido */
+    overflow-y: auto; /* permite scroll interno */
+}
+
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #ff4fa1;
+}
+
+/* Botones */
+.nav-btn {
+    width: 100%;
+    padding: 12px 15px;
+    background: #ffffff;
+    border: none;
+    font-size: 15px;
+    text-align: left;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.3s;
+    font-weight: 500;
+    color: #333;
+}
+
+.nav-btn:hover {
+    background: #ffe4f1;
+}
+
+.nav-btn.active {
+    background: #ff4fa1;
+    color: white;
+}
+
+/* ============================================
+   MAIN CONTENT (DESPEGA MÁS A LA DERECHA)
+============================================ */
+.main {
+    margin-left: 260px; /* AHORA NO SE TAPA EL CONTENIDO */
+    padding: 40px;
+}
+
+/* ============================================
+   VISTAS
+============================================ */
+.view {
+    display: none;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.view.active {
+    display: block;
+}
+
+/* Animación */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   STAT CARDS (Inicio)
+============================================ */
+.statcard-block{
+    display: flex;
+     gap: 20px; 
+}
+
+.stat-card {
+    flex: 1 1 180px; /* ancho mínimo 180px, crece según espacio */
+    max-width: 220px; /* para que no se estire demasiado */
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+}
+
+.stat-number {
+    font-size: 42px;
+    font-weight: 700;
+    color: #ff4fa1;
+}
+
+.stat-label {
+    font-size: 15px;
+    color: #555;
+}
+
+/* ============================================
+   SECCIONES Y TARJETAS
+============================================ */
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+    animation: fadeIn 0.2s ease;
+}
+
+h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #222;
+}
+
+h2 {
+    color: #ff4fa1;
+    margin-bottom: 10px;
+}
+
+/* ============================================
+   LISTAS DE CITAS
+============================================ */
+.appointment-item {
+    background: #fafafa;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border-left: 5px solid #ff4fa1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.appointment-info p {
+    margin: 3px 0;
+}
+
+.btn-confirm {
+    background: #31c36c;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-confirm:hover {
+    background: #25a058;
+}
+
+.btn-reject {
+    background: #ff4f4f;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-reject:hover {
+    background: #cc3f3f;
+}
+
+/* ============================================
+   PERSONAL DISPONIBLE
+============================================ */
+.staff-card {
+    background: #fafafa;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border-left: 5px solid #ff4fa1;
+}
+
+
+.staff-status {
+    font-weight: 600;
+    color: #ff4fa1;
+}
+
+.logout-btn {
+    width: 100%;
+    margin-top: 40px;
+    padding: 12px 15px;
+    background: #ff4f4f;
+    color: white;
+    border: none;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.logout-btn:hover {
+    background: #cc3f3f;
+}
+/* ----------------------------------------------
+   TARJETAS SUPERIORES (AÑADIR / ELIMINAR)
+---------------------------------------------- */
+.horarios-actions {
+    display: flex;
+    gap: 20px;
+}
+
+.mini-card {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+}
+
+.mini-card h3 {
+    margin-bottom: 10px;
+    color: #ff4fa1;
+}
+
+.mini-card input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.mini-card button {
+    width: 100%;
+    padding: 10px;
+    background: #ff4fa1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: .2s;
+}
+
+.mini-card button:hover {
+    background: #e23f90;
+}
+
+/* ----------------------------------------------
+   TARJETAS DE BLOQUEO POR ESTILISTA
+---------------------------------------------- */
+.stylist-grid {
+    margin-top: 25px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 22px;
+}
+
+.stylist-card {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+.stylist-card h3 {
+    color: #ff4fa1;
+    margin-bottom: 12px;
+}
+
+.stylist-card select,
+.stylist-card input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.stylist-card button {
+    width: 100%;
+    padding: 10px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+
+/* ============================================
+   GESTIÓN DE HORARIOS – TARJETAS
+============================================ */
+.horarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.horario-card {
+    background: #fff;
+    padding: 22px;
+    border-radius: 16px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+.horario-card h2 {
+    margin-top: 0;
+    color: #ff4fa1;
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+/* Inputs */
+.horario-card input,
+.horario-card select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.block-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+/* Botón */
+.btn-bloquear {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    background: #ff4fa1;
+    border: none;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-bloquear:hover {
+    background: #e73d90;
+}
+
+/* --- ESTILO GENERAL DE CARDS --- */
+.card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    border: 1px solid #e5e7eb; /* gris claro elegante */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    margin-bottom: 14px;
+    transition: all 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+}
+
+/* --- TITULOS INTERNOS --- */
+.card p {
+    margin: 3px 0;
+    font-size: 14px;
+    color: #444;
+}
+
+/* --- PARA REMARCAR ETIQUETAS --- */
+.card p strong {
+    color: #111;
+}
+
+/* --- ESPACIADO ENTRE BOTONES --- */
+.card .actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+}
+
+/* --- BOTONES --- */
+.btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+/* ACEPTAR */
+.btn-accept {
+    background: #22c55e; /* verde */
+    color: white;
+}
+
+.btn-accept:hover {
+    background: #16a34a;
+}
+
+/* CANCELAR */
+.btn-cancel {
+    background: #ef4444; /* rojo */
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #dc2626;
+}
+
+/* --- CARD ESPECIAL PARA CONFIRMADAS --- */
+.card-confirmed {
+    background: #ecfdf5;   /* verde pastel */
+    border: 1px solid #bbf7d0;
+}
+
+.staff-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+    padding: 10px;
+}
+
+.staff-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.staff-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 6px 18px rgba(0,0,0,0.15);
+}
+
+.staff-card h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.staff-card p {
+    margin: 8px 0 0;
+    font-size: 16px;
+    color: #666;
+}
+
+.citas-count {
+    font-weight: bold;
+    color: #C2185B;
+}
+
+
+/* ===== CARD INDIVIDUAL DE CITA ===== */
+
+.appointment-card {
+    background: #ffffff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 12px;
+    border-left: 6px solid #ff5f7e;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.07);
+    transition: 0.2s;
+}
+
+.appointment-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Header */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    margin: 0;
+}
+
+/* Estado */
+.status {
+    padding: 4px 10px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.status.pendiente {
+    background: #ffdd55;
+    color: #5e4a00;
+}
+
+.status.confirmada {
+    background: #1cc88a;
+    color: white;
+}
+
+/* Contenido */
+.card-body p {
+    margin: 5px 0;
+    color: #555;
+}
+
+/* Botones */
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.btn-confirmar {
+    background: #1cc88a;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+}
+
+.btn-rechazar {
+    background: #e74a3b;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+}
+
+.btn-confirmar:hover,
+.btn-rechazar:hover {
+    opacity: 0.85;
+}
+
+.block-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 20px;
+}
+
+.block-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    transition: 0.2s ease-in-out;
+}
+
+.block-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+.block-card h3 {
+    margin: 0 0 12px;
+    font-size: 20px;
+}
+
+.block-card label {
+    font-size: 14px;
+    margin-top: 8px;
+    display: block;
+}
+
+.block-card input,
+.block-card textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.btn-block {
+    width: 100%;
+    background: #111;
+    color: white;
+    border: none;
+    padding: 12px;
+    margin-top: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.btn-block:hover {
+    background: #333;
+}
+
+/* Aplica desplazamiento global a todo menos al sidebar */
+body > *:not(.sidebar) {
+    margin-left: 260px !important; /* 🔥 ahora NADA se superpone */
+}
+

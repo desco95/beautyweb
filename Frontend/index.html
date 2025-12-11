@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BeautyWeb - Sistema de Gestión de Citas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- ANIMATED FLOATING SHAPES -->
+    <div class="floating-shapes"></div>
+
+    <!-- HEADER -->
+    <header class="header solid-header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">💅</div>
+                <h1>BeautyWeb</h1>
+            </div>
+
+            <!-- USER MENU -->
+            <div class="user-info">
+                <!-- Avatar + Nombre + Botones -->
+                <div id="user-display" class="user-info-btn">
+                    <div id="avatar" class="avatar">
+                        <img src="imagenes/avatar.png" alt="Avatar">
+                    </div>
+
+                    <span id="user-label" class="user-label"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAV BAR -->
+    <nav class="nav solid-nav">
+        <div class="nav-content">
+            <button class="active" onclick="showView('inicio')">🏠 Inicio</button>
+            <button onclick="showView('book')">📅 Agendar Cita</button>
+            <button onclick="showView('appointments')">📋 Mis Citas</button>
+            <button onclick="showView('admin')">⚙️ Administración</button>
+            <div class="nav-indicator"></div>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- =======================
+             INICIO
+        ========================-->
+        <section id="inicio" class="view active">
+            <div class="card">
+                <h2 style="margin-bottom: 1rem;">Bienvenidos</h2>
+                <div class="carousel-container">
+                    <div class="carousel">
+                        <img src="imagenes/maquillaje1.png" />
+                        <img src="imagenes/cortepelo1.png" />
+                        <img src="imagenes/uñas1.png" />
+                        <img src="imagenes/uñas2.png" />
+
+                    </div>
+                    <button class="carousel-btn prev" onclick="moveSlide(-1)">❮</button>
+                    <button class="carousel-btn next" onclick="moveSlide(1)">❯</button>
+                </div>
+                <h3 style="text-align:center; margin-top: 1.4rem; color:#ff69b4;">
+                    Conócenos ✨
+                </h3>
+            </div>
+
+            <!-- ===================================
+                        SERVICIOS (14 cards)
+            ==================================== -->
+            <div class="card servicios-card">
+                <h2 style="margin-bottom: 1rem;">Servicios</h2>
+
+                <!-- CONTENEDOR QUE SE EXPANDE -->
+                <div id="servicios-container" class="servicios-container">
+
+                    <!-- 14 TARJETAS DE SERVICIO -->
+
+                    <div class="service-card">
+                        <img src="imagenes/cortepelo1.png" />
+                        <h3>Corte de cabello </h3>
+                        <p>Para hombres, mujeres y niños.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/maquillaje.png" />
+                        <h3>Sociales</h3>
+                        <p>Maquillaje y peinado</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/uñas2.png" />
+                        <h3>Extensiones de pestañas</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/extensiones.png" />
+                        <h3>Extensiones de cabello</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/laminadoCeja.png" />
+                        <h3>Laminado de ceja</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/lifting.png" />
+                        <h3>Lifting de pestañas</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/depilacion.png" />
+                        <h3>Depilación</h3>
+                        <p>Facial (ceja y bozo)</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/uñas.png" />
+                        <h3>Uñas acrílicas</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/uñas3.png" />
+                        <h3>Gelish</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/bañoACRI.png" />
+                        <h3>Baño de acrílico</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/pedicure.png" />
+                        <h3>Pedicure</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/alaciado.png" />
+                        <h3>Alaciados progresivos</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/botox.png" />
+                        <h3>Botox curly</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/faciales.png" />
+                        <h3>Faciales</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <img src="imagenes/acripie.png" />
+                        <h3>Acripie</h3>
+                        <p>Descripción corta del servicio.</p>
+                    </div>
+
+                </div>
+
+                <!-- BOTÓN VER MÁS -->
+                <button id="toggle-services-btn">Ver más</button>
+            </div>
+
+
+            <div class="card">
+                <h2>📍 Nuestra ubicación</h2>
+                <p>P.º Centro 103, Los Paraisos, 37328 León de los Aldama, Gto.</p>
+                <div class="map-box" style="margin-top:1rem;">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3721.3273332060107!2d-101.69301980000002!3d21.1393678!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x842bbf08b988e7c9%3A0x84d591ec0108042b!2sPINK%20SAL%C3%93N!5e0!3m2!1ses-419!2smx!4v1764699029420!5m2!1ses-419!2smx"
+                        allowfullscreen="" loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- =======================
+             AGENDAR CITA
+        ========================-->
+        <div id="book" class="view">
+            <div class="card form-card">
+                <h2>Agendar Cita</h2>
+                <form id="book-form" onsubmit="bookAppointment(event)">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Nombre:</label>
+                            <input id="book-name" type="text" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono:</label>
+                            <input id="book-phone" type="tel" required>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="servicio">Servicio:</label>
+                            <select id="servicio1"></select>
+
+                        </div>
+
+                        <div class="form-group">
+                            <label for="estilista">Selecciona estilista:</label>
+                            <select id="estilista"></select>
+
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Fecha:</label>
+                            <input id="book-date" type="date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Hora:</label>
+                            <select id="book-time" required>
+                                <option value="">Selecciona un horario</option>
+                                <option>09:00 AM</option>
+                                <option>10:00 AM</option>
+                                <option>11:00 AM</option>
+                                <option>12:00 PM</option>
+                                <option>01:00 PM</option>
+                                <option>02:00 PM</option>
+                                <option>03:00 PM</option>
+                                <option>04:00 PM</option>
+                                <option>05:00 PM</option>
+                                <option>06:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notas (opcional):</label>
+                        <textarea id="book-notes" rows="3"></textarea>
+                    </div>
+
+                    <button class="btn" style="width:100%;">Confirmar Cita</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- =======================
+             MIS CITAS
+        ========================-->
+        <div id="appointments" class="view">
+            <div class="card">
+                <h2>Mis Citas Próximas</h2>
+                <div id="appointments-list"></div>
+            </div>
+        </div>
+
+        <!-- =======================
+             ADMIN
+        ========================-->
+        <div id="admin" class="view">
+            <div id="admin-locked" class="card">
+                <h2>Acceso de Administrador</h2>
+                <p>Esta sección está protegida. Ingresa la contraseña de administrador para ver los datos.</p>
+                <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+                    <input id="admin-pass" type="password" placeholder="Contraseña de administrador"
+                        style="flex:1; padding:1rem;">
+                    <button class="btn" onclick="verifyAdmin()">Entrar</button>
+                </div>
+                <div id="admin-error" style="color:#ffb3c7; margin-top:0.75rem; display:none;">
+                    Contraseña incorrecta.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h2>Iniciar sesión</h2>
+            <input type="email" id="login-email" placeholder="Número de telefono">
+            <input type="password" id="login-pass" placeholder="Contraseña">
+            <button id="login-submit" class="btn-pink">Entrar</button>
+        </div>
+    </div>
+
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <h2>Crear cuenta</h2>
+            <input type="text" id="register-name" placeholder="Nombre">
+            <input type="email" id="register-email" placeholder="Número de telefono">
+            <input type="password" id="register-pass" placeholder="Contraseña">
+            <button id="register-submit" class="btn-pink">Registrarme</button>
+        </div>
+    </div>
+
+
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
