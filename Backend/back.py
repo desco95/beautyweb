@@ -3,6 +3,7 @@ from flask_cors import CORS
 import psycopg2
 import psycopg2.extras
 import bcrypt
+from datetime import date, datetime
 from datetime import date
 import os
 
@@ -110,7 +111,7 @@ def login():
     })
 
 # ================================
-#   OBTENER CITAS POR TELÉFONO
+#   OBTENER CITAS POR TELÉFONO (CON NOMBRE DE ESTILISTA)
 # ================================
 @app.route('/citas_usuario/<telefono>', methods=['GET'])
 def citas_usuario(telefono):
@@ -118,10 +119,12 @@ def citas_usuario(telefono):
     cur = conn.cursor()
 
     query = """
-        SELECT c.id, c.servicio, c.estilista, c.fecha, c.hora, c.estado
+        SELECT c.id, c.servicio, e.nombre as estilista, c.fecha, c.hora, c.estado, c.notas
         FROM citas c
         JOIN usuarios u ON c.usuario_id = u.id
-        WHERE u.telefono = %s;
+        LEFT JOIN estilistas e ON c.estilista = e.id
+        WHERE u.telefono = %s
+        ORDER BY c.fecha DESC, c.hora DESC;
     """
 
     cur.execute(query, (telefono,))
@@ -129,14 +132,20 @@ def citas_usuario(telefono):
 
     citas = []
     for r in rows:
-        citas.append({
+        cita_data = {
             "id": r[0],
             "servicio": r[1],
-            "estilista": r[2],
+            "estilista": r[2] if r[2] else "Sin asignar",
             "fecha": r[3].strftime("%Y-%m-%d"),
             "hora": r[4].strftime("%H:%M"),
             "estado": r[5]
-        })
+        }
+        
+        # Agregar motivo de rechazo si existe
+        if r[5] == "Cancelada" and r[6]:
+            cita_data["motivo_rechazo"] = r[6]
+            
+        citas.append(cita_data)
 
     cur.close()
     conn.close()
@@ -223,7 +232,7 @@ def obtener_citas():
 
 
 # ================================
-#   CREAR CITA
+#   CREAR CITA CON VALIDACIONES
 # ================================
 @app.route("/agendar", methods=["POST"])
 def agendar():
@@ -231,7 +240,7 @@ def agendar():
 
     usuario_id = data.get("usuario_id")
     servicio = data.get("servicio")
-    estilista = data.get("estilista")
+    estilista_id = data.get("estilista")  # Ahora es el ID
     fecha = data.get("fecha")
     hora = data.get("hora")
     notas = data.get("notas")
@@ -239,18 +248,58 @@ def agendar():
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("""
-        INSERT INTO citas (usuario_id, servicio, estilista, fecha, hora, notas)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        RETURNING id;
-    """, (usuario_id, servicio, estilista, fecha, hora, notas))
+    try:
+        # 1. Verificar que la fecha no sea pasada
+        fecha_cita = datetime.strptime(fecha, "%Y-%m-%d").date()
+        if fecha_cita < date.today():
+            return jsonify({"error": "No puedes agendar citas en fechas pasadas"}), 400
 
-    new_id = cur.fetchone()[0]
+        # 2. Verificar si el estilista está bloqueado ese día
+        cur.execute("""
+            SELECT id FROM horarios_bloqueados
+            WHERE id_estilista = %s AND fecha = %s
+        """, (estilista_id, fecha))
+        
+        if cur.fetchone():
+            return jsonify({"error": "El estilista no está disponible en esta fecha"}), 400
 
-    conn.commit()
-    conn.close()
+        # 3. Verificar si ya hay una cita confirmada en ese horario para ese estilista
+        cur.execute("""
+            SELECT id FROM citas
+            WHERE estilista = %s 
+            AND fecha = %s 
+            AND hora = %s 
+            AND estado IN ('Pendiente', 'Confirmada')
+        """, (estilista_id, fecha, hora))
+        
+        if cur.fetchone():
+            return jsonify({"error": "Este horario ya está ocupado para este estilista"}), 400
 
-    return jsonify({"mensaje": "Cita agendada", "id": new_id})
+        # 4. Obtener el nombre del estilista
+        cur.execute("SELECT nombre FROM estilistas WHERE id = %s", (estilista_id,))
+        estilista_nombre = cur.fetchone()
+        
+        if not estilista_nombre:
+            return jsonify({"error": "Estilista no encontrado"}), 400
+
+        # 5. Insertar la cita con el ID del estilista
+        cur.execute("""
+            INSERT INTO citas (usuario_id, servicio, estilista, fecha, hora, notas)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id;
+        """, (usuario_id, servicio, estilista_id, fecha, hora, notas))
+
+        new_id = cur.fetchone()[0]
+
+        conn.commit()
+        return jsonify({"mensaje": "Cita agendada", "id": new_id})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
 
 
 # ================================
@@ -375,7 +424,7 @@ def delete_stylist():
 
 
 # ================================
-#   OBTENER CITAS PENDIENTES
+#   OBTENER CITAS PENDIENTES (CON NOMBRE)
 # ================================
 @app.route('/citas/pendientes', methods=['GET'])
 def citas_pendientes():
@@ -383,15 +432,17 @@ def citas_pendientes():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT c.id, c.servicio, c.estilista, c.fecha, c.hora, c.estado,
+        SELECT c.id, c.servicio, e.nombre as estilista, c.fecha, c.hora, c.estado,
                u.nombre AS cliente
         FROM citas c
         JOIN usuarios u ON c.usuario_id = u.id
+        LEFT JOIN estilistas e ON c.estilista = e.id
         WHERE c.estado IN ('Pendiente', 'Confirmada')
-        ORDER BY c.fecha, c.hora;
+        ORDER BY c.fecha DESC, c.hora DESC;
     """)
 
     rows = cursor.fetchall()
+    cursor.close()
     conn.close()
 
     citas = []
@@ -399,7 +450,7 @@ def citas_pendientes():
         citas.append({
             "id": row[0],
             "servicio": row[1],
-            "estilista": row[2],
+            "estilista": row[2] if row[2] else "Sin asignar",
             "fecha": str(row[3]),
             "hora": row[4].strftime("%H:%M"),
             "estado": row[5],
@@ -407,6 +458,7 @@ def citas_pendientes():
         })
 
     return jsonify(citas)
+    
 
 # ================================
 #   CONFIRMAR CITA
@@ -501,6 +553,29 @@ def count_citas_pendientes():
 
     except Exception as e:
         return jsonify({"error": "Error interno en el servidor"}), 500
+
+# ================================
+#   OBTENER HORARIOS OCUPADOS POR ESTILISTA Y FECHA
+# ================================
+@app.route("/horarios_ocupados/<int:id_estilista>/<fecha>", methods=["GET"])
+def obtener_horarios_ocupados(id_estilista, fecha):
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT hora 
+        FROM citas
+        WHERE estilista = %s 
+        AND fecha = %s 
+        AND estado IN ('Pendiente', 'Confirmada')
+    """, (id_estilista, fecha))
+
+    ocupados = [str(r[0])[:-3] for r in cur.fetchall()]  # Formato HH:MM
+
+    cur.close()
+    conn.close()
+
+    return jsonify(ocupados)
 
 # ================================
 # CONTAR CITAS CONFIRMADAS DEL MES ACTUAL
