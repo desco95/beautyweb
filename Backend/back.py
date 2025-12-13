@@ -620,14 +620,15 @@ def health():
 
 # dias bloqueados por estilista
 @app.route("/horarios_bloqueados/<int:id_estilista>/<fecha>", methods=["GET"])
-def obtener_bloqueados(id_estilista, fecha):
+def verificar_dia_bloqueado(id_estilista, fecha):
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("""
         SELECT 1
         FROM horarios_bloqueados
-        WHERE id_estilista = %s AND fecha = %s
+        WHERE id_estilista = %s
+          AND fecha = %s
         LIMIT 1
     """, (id_estilista, fecha))
 
@@ -637,7 +638,6 @@ def obtener_bloqueados(id_estilista, fecha):
     conn.close()
 
     return jsonify({"bloqueado": bloqueado})
-
 
 # ==================================================
 #   INICIO DEL SERVIDOR
