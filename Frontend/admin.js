@@ -14,7 +14,6 @@ function showAdminView(view) {
 
     if (view === "horarios") {
         loadBlockStylists();
-        cargarEstilistas();
 });
     }
 
@@ -254,15 +253,31 @@ async function addStylist() {
    DELETE STYLIST
 ========================== */
 async function cargarEstilistas() {
-    const res = await fetch(`${window.API_URL}/estilistas`);
-    const estilistas = await res.json();
+    try {
+        const response = await fetch(`${window.API_URL}/admin/staff`);
+        if (!response.ok) throw new Error("Error en backend");
 
-    const select = document.getElementById("delete-estilista-select");
-    select.innerHTML = "<option value=''>Selecciona un estilista...</option>";
+        const staff = await response.json();
+        const select = document.getElementById("delete-estilista-select");
 
-    estilistas.forEach(e => {
-        select.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
-    });
+        if (!select) {
+            console.error("No existe el select delete-estilista-select");
+            return;
+        }
+
+        select.innerHTML = "<option value=''>Selecciona un estilista...</option>";
+
+        staff.forEach(s => {
+            select.innerHTML += `
+                <option value="${s.id_estilista}">
+                    ${s.nombre} (ID: ${s.id_estilista})
+                </option>
+            `;
+        });
+
+    } catch (error) {
+        console.error("Error cargando estilistas:", error);
+    }
 }
 
 async function deleteStylist() {
@@ -284,15 +299,11 @@ async function deleteStylist() {
         });
 
         const data = await response.json();
-
-        if (!response.ok) {
-            alert(data.error);
-            return;
-        }
+        if (!response.ok) return alert(data.error);
 
         alert("Estilista eliminado ✓");
 
-        // Recargar lista
+        // Refrescar UI
         cargarEstilistas();
         loadStaff();
 
@@ -300,6 +311,7 @@ async function deleteStylist() {
         console.error("Error eliminando estilista:", error);
     }
 }
+
 
 /* ===================================================
    CARGAR ESTILISTAS SOLO PARA BLOQUEOS
