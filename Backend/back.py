@@ -612,32 +612,10 @@ def count_confirmed_month():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 # Ruta de salud para Render
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"}), 200
-
-# dias bloqueados por estilista
-@app.route("/horarios_bloqueados/<int:id_estilista>/<fecha>", methods=["GET"])
-def verificar_dia_bloqueado(id_estilista, fecha):
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("""
-        SELECT 1
-        FROM horarios_bloqueados
-        WHERE id_estilista = %s
-          AND fecha = %s
-        LIMIT 1
-    """, (id_estilista, fecha))
-
-    bloqueado = cur.fetchone() is not None
-
-    cur.close()
-    conn.close()
-
-    return jsonify({"bloqueado": bloqueado})
 
 # ==================================================
 #   INICIO DEL SERVIDOR
