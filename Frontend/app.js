@@ -578,17 +578,34 @@ try {
 }
 
 document.getElementById("book-form").addEventListener("submit", function (e) {
-    const telefono = document.getElementById("book-phone").value;
+    const telefono = document.getElementById("book-phone").value.trim();
+    const nombre = document.getElementById("book-name").value.trim();
 
-    // Solo 10 números exactos
+    // 📱 Teléfono: exactamente 10 números
     const telefonoValido = /^[0-9]{10}$/.test(telefono);
 
+    // 🧑 Nombre: solo letras y espacios, máx 15 caracteres
+    const nombreValido = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,15}$/.test(nombre);
+
+    if (!nombreValido) {
+        e.preventDefault();
+        alert("El nombre solo puede contener letras y máximo 15 caracteres.");
+        return;
+    }
+
     if (!telefonoValido) {
-        e.preventDefault(); // 🚫 No se envía
+        e.preventDefault();
         alert("El teléfono debe contener EXACTAMENTE 10 números y sin letras.");
         return;
     }
 });
+
+document.getElementById("book-name").addEventListener("input", function () {
+    this.value = this.value
+        .replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
+        .slice(0, 15);
+});
+
 
 
 
