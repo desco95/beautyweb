@@ -607,20 +607,31 @@ document.getElementById("book-name").addEventListener("input", function () {
         .slice(0, 15);
 });
 
-function limpiarFormularioCita() {
-    const form = document.getElementById("book-form");
-    if (!form) return;
+//limpiar vista
+function limpiarVistaAgendar() {
+    const vista = document.getElementById("book");
+    if (!vista) return;
 
-    // Limpia SOLO inputs del usuario
-    form.querySelectorAll(
+    // 🔹 Inputs del usuario
+    vista.querySelectorAll(
         "input[type='text'], input[type='tel'], input[type='date'], input[type='time'], textarea"
     ).forEach(campo => {
         campo.value = "";
     });
 
-    // Si tienes radios o checkboxes del usuario
-    form.querySelectorAll("input[type='radio'], input[type='checkbox']").forEach(campo => {
+    // 🔹 Selects → volver a primera opción (NO borrar opciones)
+    vista.querySelectorAll("select").forEach(select => {
+        select.selectedIndex = 0;
+    });
+
+    // 🔹 Radios y checkboxes
+    vista.querySelectorAll("input[type='radio'], input[type='checkbox']").forEach(campo => {
         campo.checked = false;
+    });
+
+    // 🔹 Mensajes, errores, estados visuales
+    vista.querySelectorAll(".error, .success, .active, .selected").forEach(el => {
+        el.classList.remove("error", "success", "active", "selected");
     });
 }
 
@@ -630,14 +641,15 @@ document.querySelectorAll("nav button").forEach(btn => {
     btn.addEventListener("click", () => {
         const nuevaVista = btn.dataset.view;
 
-        // SOLO si salgo de Agendar Cita
+        // 🧹 SOLO cuando sales de Agendar Cita
         if (vistaActual === "book" && nuevaVista !== "book") {
-            limpiarFormularioCita();
+            limpiarVistaAgendar();
         }
 
         vistaActual = nuevaVista;
     });
 });
+
 
 
 
