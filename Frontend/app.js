@@ -651,27 +651,41 @@ function limpiarVistaAgendar() {
 
 const fechaInput = document.getElementById("book-date");
 
-fechaInput.addEventListener("change", async () => {
-    const fecha = fechaInput.value;
+document.addEventListener("DOMContentLoaded", () => {
+    const fechaInput = document.getElementById("book-date");
+    const estilistaSelect = document.getElementById("estilista");
+
+    if (!fechaInput || !estilistaSelect) return;
+
+    fechaInput.addEventListener("change", verificarDiaBloqueado);
+});
+
+async function verificarDiaBloqueado() {
+    const fechaInput = document.getElementById("book-date");
     const estilista = document.getElementById("estilista").value;
+    const fecha = fechaInput.value;
 
     if (!fecha || !estilista) return;
 
     try {
         const res = await fetch(
-            `${API_URL}/horarios_bloqueados/${estilista}/${fecha}`
+            `${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`
         );
+
         const data = await res.json();
 
-        if (data.bloqueado) {
+        // 👇 TU ENDPOINT devuelve un ARRAY
+        if (Array.isArray(data) && data.length > 0) {
             alert("❌ El estilista no está disponible este día");
             fechaInput.value = "";
+            document.getElementById("book-time").innerHTML =
+                '<option value="">Día no disponible</option>';
         }
 
-    } catch (e) {
-        console.error("Error verificando fecha:", e);
+    } catch (error) {
+        console.error("Error verificando bloqueo:", error);
     }
-});
+}
 
 
 /* ============================================================
