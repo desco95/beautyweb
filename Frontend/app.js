@@ -94,6 +94,15 @@ document.addEventListener("click", (e) => {
     if (e.target === registerModal) registerModal.classList.remove("show");
 });
 
+function telefonoValido(telefono) {
+    return /^[0-9]{10}$/.test(telefono);
+}
+
+function nombreValido(nombre) {
+    return nombre.length > 0 && nombre.length <= 20;
+}
+
+
 // LOGIN
 loginSubmit.addEventListener("click", () => {
     const telefono = loginEmail.value.trim();
@@ -104,37 +113,40 @@ loginSubmit.addEventListener("click", () => {
         return;
     }
 
+    if (!telefonoValido(telefono)) {
+        alert("El teléfono debe contener exactamente 10 números.");
+        return;
+    }
+
     fetch(`${window.API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telefono, contrasena })
     })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
 
-            currentUser = {
-                id: data.id,
-                name: data.nombre,
-                phone: data.telefono
-            };
+        currentUser = {
+            id: data.id,
+            name: data.nombre,
+            phone: data.telefono
+        };
 
-            updateUserUI();
-            loginModal.classList.remove("show");
-            cargarCitas();  
+        updateUserUI();
+        loginModal.classList.remove("show");
+        cargarCitas();
 
-
-            loginEmail.value = "";
-            loginPass.value = "";
-        })
-        .catch(err => alert("Error de conexión con el servidor"));
+        loginEmail.value = "";
+        loginPass.value = "";
+    })
+    .catch(() => alert("Error de conexión con el servidor"));
 });
 
-
-// REGISTRO
+//REGISTER
 registerSubmit.addEventListener("click", () => {
     const nombre = registerName.value.trim();
     const telefono = registerEmail.value.trim();
@@ -145,33 +157,43 @@ registerSubmit.addEventListener("click", () => {
         return;
     }
 
+    if (!nombreValido(nombre)) {
+        alert("El nombre no puede superar los 20 caracteres.");
+        return;
+    }
+
+    if (!telefonoValido(telefono)) {
+        alert("El teléfono debe contener exactamente 10 números.");
+        return;
+    }
+
     fetch(`${window.API_URL}/registro`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre, telefono, contrasena })
     })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
 
-            alert("Registro exitoso");
+        alert("Registro exitoso");
 
-            currentUser = {
-                name: nombre,
-                phone: telefono
-            };
+        currentUser = {
+            name: nombre,
+            phone: telefono
+        };
 
-            updateUserUI();
-            registerModal.classList.remove("show");
+        updateUserUI();
+        registerModal.classList.remove("show");
 
-            registerName.value = "";
-            registerEmail.value = "";
-            registerPass.value = "";
-        })
-        .catch(err => alert("Error de conexión con el servidor"));
+        registerName.value = "";
+        registerEmail.value = "";
+        registerPass.value = "";
+    })
+    .catch(() => alert("Error de conexión con el servidor"));
 });
 
 
