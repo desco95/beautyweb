@@ -552,6 +552,15 @@ try {
     } catch (err) {
     console.error("Error cargando citas:", err);
 }
-}/* ============================================================
+}
+
+//para validar numero de tel
+<script>
+document.getElementById("book-phone").addEventListener("input", function () {
+    this.value = this.value.replace(/\D/g, "").slice(0, 10);
+});
+</script>
+
+/* ============================================================
 FIN
 ============================================================ */
