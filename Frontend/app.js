@@ -385,23 +385,6 @@ function convertirA12Horas(hora24) {
     return `${String(h).padStart(2, '0')}:${minutos} ${ampm}`;
 }
 
-// Agregar event listeners
-document.addEventListener("DOMContentLoaded", () => {
-    establecerFechaMinima();
-    
-    const estilistaSelect = document.getElementById("estilista");
-    const fechaInput = document.getElementById("book-date");
-    
-    if (estilistaSelect) {
-        estilistaSelect.addEventListener("change", cargarHorariosDisponibles);
-    }
-
-   if (fechaInput) {
-    fechaInput.addEventListener("change", verificarDiaBloqueado);
-   }
-
-});
-
 /* ============================================
    INICIALIZAR
 ============================================ */
@@ -651,15 +634,6 @@ function limpiarVistaAgendar() {
 
 const fechaInput = document.getElementById("book-date");
 
-document.addEventListener("DOMContentLoaded", () => {
-    const fechaInput = document.getElementById("book-date");
-    const estilistaSelect = document.getElementById("estilista");
-
-    if (!fechaInput || !estilistaSelect) return;
-
-    fechaInput.addEventListener("change", verificarDiaBloqueado);
-});
-
 async function verificarDiaBloqueado() {
     const fechaInput = document.getElementById("book-date");
     const estilista = document.getElementById("estilista").value;
@@ -687,6 +661,14 @@ async function verificarDiaBloqueado() {
     }
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    const fechaInput = document.getElementById("book-date");
+    const estilistaSelect = document.getElementById("estilista");
+
+    if (!fechaInput || !estilistaSelect) return;
+
+    fechaInput.addEventListener("change", verificarDiaBloqueado);
+});
 
 /* ============================================================
 FIN
