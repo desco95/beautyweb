@@ -649,34 +649,30 @@ function limpiarVistaAgendar() {
         .forEach(el => el.classList.remove("active", "selected", "error", "success"));
 }
 
-async function verificarDiaBloqueado() {
-    const estilista = document.getElementById("estilista").value;
-    const fecha = document.getElementById("book-date").value;
-    const selectHora = document.getElementById("book-time");
+const fechaInput = document.getElementById("fecha");
 
-    if (!estilista || !fecha) return;
+fechaInput.addEventListener("change", async () => {
+    const fecha = fechaInput.value;
+    const estilista = document.getElementById("estilista").value;
+
+    if (!fecha || !estilista) return;
 
     try {
-        const res = await fetch(`${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`);
-        const bloqueos = await res.json();
+        const res = await fetch(
+            `${API_URL}/horarios_bloqueados/${estilista}/${fecha}`
+        );
+        const data = await res.json();
 
-        if (bloqueos.length > 0) {
-            alert("⚠️ El estilista no está disponible en la fecha seleccionada.");
-
-            // Limpia la fecha y deshabilita horarios
-            document.getElementById("book-date").value = "";
-            selectHora.innerHTML = '<option value="">Selecciona una fecha válida</option>';
-            selectHora.disabled = true;
-        } else {
-            // Si no está bloqueado, permitir horarios
-            selectHora.disabled = false;
-            cargarHorariosDisponibles();
+        if (data.bloqueado) {
+            alert("❌ El estilista no está disponible este día");
+            fechaInput.value = "";
         }
 
-    } catch (error) {
-        console.error("Error verificando bloqueo:", error);
+    } catch (e) {
+        console.error("Error verificando fecha:", e);
     }
-}
+});
+
 
 /* ============================================================
 FIN
