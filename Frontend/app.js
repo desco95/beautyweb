@@ -104,14 +104,6 @@ function nombreValido(nombre) {
     return nombre.length > 0 && nombre.length <= 20;
 }
 
-[loginEmail, registerEmail].forEach(input => {
-    input.addEventListener("input", () => {
-        input.value = input.value.replace(/\D/g, "").slice(0, 10);
-    });
-});
-
-
-
 // LOGIN
 loginSubmit.addEventListener("click", () => {
     const telefono = loginEmail.value.trim();
@@ -123,7 +115,7 @@ loginSubmit.addEventListener("click", () => {
     }
 
     if (!telefonoValido(telefono)) {
-        alert("El teléfono debe contener exactamente 10 números.");
+        alert("teléfono invalido");
         return;
     }
 
@@ -167,12 +159,12 @@ registerSubmit.addEventListener("click", () => {
     }
 
     if (!nombreValido(nombre)) {
-        alert("El nombre no puede superar los 20 caracteres.");
+        alert("El nombre es invalido");
         return;
     }
 
     if (!telefonoValido(telefono)) {
-        alert("El teléfono debe contener exactamente 10 números.");
+        alert("El teléfono no es valido");
         return;
     }
 
