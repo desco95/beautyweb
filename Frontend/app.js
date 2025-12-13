@@ -32,13 +32,6 @@ logoutBtn.textContent = "Cerrar sesión";
 logoutBtn.className = "nav-btn";
 logoutBtn.style.display = "none";
 
-//calendario
-let calendar = flatpickr("#book-date", {
-    dateFormat: "Y-m-d",
-    minDate: "today",
-    disable: []
-});
-
 // Agregamos botones al contenedor de usuario
 userDisplay.innerHTML = "";
 userDisplay.appendChild(avatar);
@@ -65,6 +58,12 @@ function updateUserUI() {
         logoutBtn.style.display = "none";
     }
 }
+
+let calendar = flatpickr("#book-date", {
+    dateFormat: "Y-m-d",
+    minDate: "today",
+    disable: []
+});
 
 /* ============================================
    FUNCIONALIDAD LOGIN / REGISTRO CON MODALES
