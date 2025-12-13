@@ -275,6 +275,8 @@ async function cargarEstilistas() {
                 </option>
             `;
         });
+       console.log("Cargando estilistas para eliminar");
+
 
     } catch (error) {
         console.error("Error cargando estilistas:", error);
