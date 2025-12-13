@@ -32,6 +32,13 @@ logoutBtn.textContent = "Cerrar sesión";
 logoutBtn.className = "nav-btn";
 logoutBtn.style.display = "none";
 
+//calendario
+let calendar = flatpickr("#book-date", {
+    dateFormat: "Y-m-d",
+    minDate: "today",
+    disable: []
+});
+
 // Agregamos botones al contenedor de usuario
 userDisplay.innerHTML = "";
 userDisplay.appendChild(avatar);
@@ -646,6 +653,54 @@ function limpiarVistaAgendar() {
     // Estados visuales
     vista.querySelectorAll(".active, .selected, .error, .success")
         .forEach(el => el.classList.remove("active", "selected", "error", "success"));
+}
+
+//para calendario
+document.getElementById("estilista").addEventListener("change", async (e) => {
+    const estilistaId = e.target.value;
+
+    calendar.clear();
+    calendar.set("disable", []);
+
+    if (!estilistaId) return;
+
+    try {
+        const res = await fetch(`${window.API_URL}/dias_bloqueados/${estilistaId}`);
+        const diasBloqueados = await res.json();
+
+        calendar.set("disable", diasBloqueados);
+
+    } catch (err) {
+        console.error("Error cargando días bloqueados:", err);
+    }
+});
+
+document.getElementById("book-date").addEventListener("change", async () => {
+    const fecha = document.getElementById("book-date").value;
+    const estilista = document.getElementById("estilista").value;
+
+    if (!fecha || !estilista) return;
+
+    try {
+        const res = await fetch(
+            `${window.API_URL}/horarios_ocupados/${estilista}/${fecha}`
+        );
+
+        const ocupados = await res.json();
+        bloquearHoras(ocupados);
+
+    } catch (err) {
+        console.error("Error cargando horarios ocupados:", err);
+    }
+});
+
+function bloquearHoras(horasOcupadas) {
+    const select = document.getElementById("book-time");
+
+    [...select.options].forEach(opt => {
+        if (!opt.value) return;
+        opt.disabled = horasOcupadas.includes(opt.value);
+    });
 }
 
 
