@@ -555,11 +555,9 @@ try {
 }
 
 //para validar numero de tel
-<script>
 document.getElementById("tel_prueba").addEventListener("input", function () {
     this.value = this.value.replace(/\D/g, "").slice(0, 10);
 });
-</script>
 
 /* ============================================================
 FIN
