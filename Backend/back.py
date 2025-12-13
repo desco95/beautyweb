@@ -619,23 +619,25 @@ def health():
     return jsonify({"status": "ok"}), 200
 
 # dias bloqueados por estilista
-@app.route("/dias_bloqueados/<int:id_estilista>", methods=["GET"])
-def obtener_dias_bloqueados(id_estilista):
+@app.route("/horarios_bloqueados/<int:id_estilista>/<fecha>", methods=["GET"])
+def obtener_bloqueados(id_estilista, fecha):
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT fecha
+        SELECT 1
         FROM horarios_bloqueados
-        WHERE id_estilista = %s
-    """, (id_estilista,))
+        WHERE id_estilista = %s AND fecha = %s
+        LIMIT 1
+    """, (id_estilista, fecha))
 
-    dias = [r[0].strftime("%Y-%m-%d") for r in cur.fetchall()]
+    bloqueado = cur.fetchone() is not None
 
     cur.close()
     conn.close()
 
-    return jsonify(dias)
+    return jsonify({"bloqueado": bloqueado})
+
 
 # ==================================================
 #   INICIO DEL SERVIDOR
