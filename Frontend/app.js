@@ -1,3 +1,4 @@
+
 /* =========================================================
    BEAUTYWEB - APP.JS COMPLETO FUNCIONAL SIN MODALES
 ========================================================= */
@@ -605,6 +606,26 @@ document.getElementById("book-name").addEventListener("input", function () {
         .replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
         .slice(0, 15);
 });
+
+let vistaActual = "";
+
+document.querySelectorAll("nav button").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const nuevaVista = btn.dataset.view;
+
+        if (vistaActual === "book" && nuevaVista !== "book") {
+            limpiarFormularioCita();
+        }
+
+        vistaActual = nuevaVista;
+    });
+});
+
+function limpiarFormularioCita() {
+    const form = document.getElementById("book-form");
+    if (form) form.reset();
+}
+
 
 
 
