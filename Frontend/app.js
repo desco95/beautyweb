@@ -649,7 +649,7 @@ function limpiarVistaAgendar() {
         .forEach(el => el.classList.remove("active", "selected", "error", "success"));
 }
 
-const fechaInput = document.getElementById("fecha");
+const fechaInput = document.getElementById("book-date");
 
 fechaInput.addEventListener("change", async () => {
     const fecha = fechaInput.value;
