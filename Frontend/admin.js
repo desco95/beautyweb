@@ -14,6 +14,8 @@ function showAdminView(view) {
 
     if (view === "horarios") {
         loadBlockStylists();
+        cargarEstilistas();
+});
     }
 
     if (view === "inicio") {
