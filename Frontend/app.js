@@ -1,4 +1,3 @@
-
 /* =========================================================
    BEAUTYWEB - APP.JS COMPLETO FUNCIONAL SIN MODALES
 ========================================================= */
@@ -385,6 +384,22 @@ function convertirA12Horas(hora24) {
     return `${String(h).padStart(2, '0')}:${minutos} ${ampm}`;
 }
 
+// Agregar event listeners
+document.addEventListener("DOMContentLoaded", () => {
+    establecerFechaMinima();
+    
+    const estilistaSelect = document.getElementById("estilista");
+    const fechaInput = document.getElementById("book-date");
+    
+    if (estilistaSelect) {
+        estilistaSelect.addEventListener("change", cargarHorariosDisponibles);
+    }
+    
+    if (fechaInput) {
+        fechaInput.addEventListener("change", cargarHorariosDisponibles);
+    }
+});
+
 /* ============================================
    INICIALIZAR
 ============================================ */
@@ -632,44 +647,6 @@ function limpiarVistaAgendar() {
         .forEach(el => el.classList.remove("active", "selected", "error", "success"));
 }
 
-const fechaInput = document.getElementById("book-date");
-
-async function verificarDiaBloqueado() {
-    const fechaInput = document.getElementById("book-date");
-    const estilista = document.getElementById("estilista").value;
-    const fecha = fechaInput.value;
-
-    if (!fecha || !estilista) return;
-
-    try {
-        const res = await fetch(
-            `${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`
-        );
-
-        const data = await res.json();
-
-        // 👇 TU ENDPOINT devuelve un ARRAY
-        if (Array.isArray(data) && data.length > 0) {
-            alert("❌ El estilista no está disponible este día");
-            fechaInput.value = "";
-            document.getElementById("book-time").innerHTML =
-                '<option value="">Día no disponible</option>';
-        }
-
-    } catch (error) {
-        console.error("Error verificando bloqueo:", error);
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    const fechaInput = document.getElementById("book-date");
-    const estilistaSelect = document.getElementById("estilista");
-
-    if (!fechaInput || !estilistaSelect) return;
-
-    fechaInput.addEventListener("change", verificarDiaBloqueado);
-});
-
 /* ============================================================
 FIN
-============================================================ */
+==============================
