@@ -94,6 +94,8 @@ document.addEventListener("click", (e) => {
     if (e.target === registerModal) registerModal.classList.remove("show");
 });
 
+
+//FORMS
 function telefonoValido(telefono) {
     return /^[0-9]{10}$/.test(telefono);
 }
@@ -101,6 +103,13 @@ function telefonoValido(telefono) {
 function nombreValido(nombre) {
     return nombre.length > 0 && nombre.length <= 20;
 }
+
+[loginEmail, registerEmail].forEach(input => {
+    input.addEventListener("input", () => {
+        input.value = input.value.replace(/\D/g, "").slice(0, 10);
+    });
+});
+
 
 
 // LOGIN
