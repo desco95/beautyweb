@@ -618,6 +618,26 @@ def count_confirmed_month():
 def health():
     return jsonify({"status": "ok"}), 200
 
+# dias bloqueados por estilista
+@app.route("/dias_bloqueados/<int:id_estilista>", methods=["GET"])
+def obtener_dias_bloqueados(id_estilista):
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT fecha
+        FROM bloqueos
+        WHERE id_estilista = %s
+    """, (id_estilista,))
+
+    dias = [r[0].strftime("%Y-%m-%d") for r in cur.fetchall()]
+
+    cur.close()
+    conn.close()
+
+    return jsonify(dias)
+
+
 # ==================================================
 #   INICIO DEL SERVIDOR
 # ==================================================
