@@ -554,6 +554,19 @@ try {
 }
 }
 
+document.getElementById("book-form").addEventListener("submit", function (e) {
+    const telefono = document.getElementById("book-phone").value;
+
+    // Solo 10 números exactos
+    const telefonoValido = /^[0-9]{10}$/.test(telefono);
+
+    if (!telefonoValido) {
+        e.preventDefault(); // 🚫 No se envía
+        alert("El teléfono debe contener EXACTAMENTE 10 números y sin letras.");
+        return;
+    }
+});
+
 
 
 /* ============================================================
