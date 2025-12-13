@@ -607,31 +607,38 @@ document.getElementById("book-name").addEventListener("input", function () {
         .slice(0, 15);
 });
 
-let estabaEnAgendar = false;
+function limpiarFormularioCita() {
+    const form = document.getElementById("book-form");
+    if (!form) return;
+
+    // Limpia SOLO inputs del usuario
+    form.querySelectorAll(
+        "input[type='text'], input[type='tel'], input[type='date'], input[type='time'], textarea"
+    ).forEach(campo => {
+        campo.value = "";
+    });
+
+    // Si tienes radios o checkboxes del usuario
+    form.querySelectorAll("input[type='radio'], input[type='checkbox']").forEach(campo => {
+        campo.checked = false;
+    });
+}
+
+let vistaActual = "";
 
 document.querySelectorAll("nav button").forEach(btn => {
     btn.addEventListener("click", () => {
+        const nuevaVista = btn.dataset.view;
 
-        // Si estaba en agendar y salgo a otra vista → limpiar
-        if (estabaEnAgendar && btn.textContent.includes("Inicio") ||
-            estabaEnAgendar && btn.textContent.includes("Mis Citas") ||
-            estabaEnAgendar && btn.textContent.includes("Administración")) {
-
+        // SOLO si salgo de Agendar Cita
+        if (vistaActual === "book" && nuevaVista !== "book") {
             limpiarFormularioCita();
-            estabaEnAgendar = false;
         }
 
-        // Si entro a Agendar Cita
-        if (btn.textContent.includes("Agendar")) {
-            estabaEnAgendar = true;
-        }
+        vistaActual = nuevaVista;
     });
 });
 
-function limpiarFormularioCita() {
-    const form = document.getElementById("book-form");
-    if (form) form.reset();
-}
 
 
 
