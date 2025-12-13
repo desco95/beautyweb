@@ -425,7 +425,13 @@ function generateBlockCards(stylists) {
             </div>
 
             <label>Motivo:</label>
-            <input type="text" class="reason" placeholder="Motivo">
+            <select class="reason">
+                <option value="Vacaciones">Vacaciones</option>
+                <option value="Día libre">Día libre</option>
+                <option value="Incapacidad">Incapacidad</option>
+                <option value="Evento personal">Evento personal</option>
+            </select>
+
 
             <button class="btn-block" data-id="${est.id_estilista}">Bloquear</button>
         `;
