@@ -626,7 +626,7 @@ def obtener_dias_bloqueados(id_estilista):
 
     cur.execute("""
         SELECT fecha
-        FROM bloqueos
+        FROM horarios_bloqueados
         WHERE id_estilista = %s
     """, (id_estilista,))
 
@@ -636,7 +636,6 @@ def obtener_dias_bloqueados(id_estilista):
     conn.close()
 
     return jsonify(dias)
-
 
 # ==================================================
 #   INICIO DEL SERVIDOR
