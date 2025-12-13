@@ -607,17 +607,24 @@ document.getElementById("book-name").addEventListener("input", function () {
         .slice(0, 15);
 });
 
-let vistaActual = "";
+let estabaEnAgendar = false;
 
 document.querySelectorAll("nav button").forEach(btn => {
     btn.addEventListener("click", () => {
-        const nuevaVista = btn.dataset.view;
 
-        if (vistaActual === "book" && nuevaVista !== "book") {
+        // Si estaba en agendar y salgo a otra vista → limpiar
+        if (estabaEnAgendar && btn.textContent.includes("Inicio") ||
+            estabaEnAgendar && btn.textContent.includes("Mis Citas") ||
+            estabaEnAgendar && btn.textContent.includes("Administración")) {
+
             limpiarFormularioCita();
+            estabaEnAgendar = false;
         }
 
-        vistaActual = nuevaVista;
+        // Si entro a Agendar Cita
+        if (btn.textContent.includes("Agendar")) {
+            estabaEnAgendar = true;
+        }
     });
 });
 
@@ -625,6 +632,7 @@ function limpiarFormularioCita() {
     const form = document.getElementById("book-form");
     if (form) form.reset();
 }
+
 
 
 
