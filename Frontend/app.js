@@ -608,51 +608,45 @@ document.getElementById("book-name").addEventListener("input", function () {
 });
 
 //limpiar vista
+const vistaBook = document.getElementById("book");
+
+const observer = new MutationObserver(() => {
+    const visible = vistaBook.classList.contains("active") ||
+                    vistaBook.style.display === "block";
+
+    // 👉 Si ya NO está visible → limpiar
+    if (!visible) {
+        limpiarVistaAgendar();
+    }
+});
+
+observer.observe(vistaBook, {
+    attributes: true,
+    attributeFilter: ["class", "style"]
+});
+
 function limpiarVistaAgendar() {
     const vista = document.getElementById("book");
     if (!vista) return;
 
-    // 🔹 Inputs del usuario
+    // Inputs del usuario
     vista.querySelectorAll(
         "input[type='text'], input[type='tel'], input[type='date'], input[type='time'], textarea"
-    ).forEach(campo => {
-        campo.value = "";
-    });
+    ).forEach(campo => campo.value = "");
 
-    // 🔹 Selects → volver a primera opción (NO borrar opciones)
+    // Selects → volver a la primera opción (NO borrar opciones)
     vista.querySelectorAll("select").forEach(select => {
         select.selectedIndex = 0;
     });
 
-    // 🔹 Radios y checkboxes
-    vista.querySelectorAll("input[type='radio'], input[type='checkbox']").forEach(campo => {
-        campo.checked = false;
-    });
+    // Radios / checkboxes
+    vista.querySelectorAll("input[type='radio'], input[type='checkbox']")
+        .forEach(c => c.checked = false);
 
-    // 🔹 Mensajes, errores, estados visuales
-    vista.querySelectorAll(".error, .success, .active, .selected").forEach(el => {
-        el.classList.remove("error", "success", "active", "selected");
-    });
+    // Estados visuales
+    vista.querySelectorAll(".active, .selected, .error, .success")
+        .forEach(el => el.classList.remove("active", "selected", "error", "success"));
 }
-
-let vistaActual = "";
-
-document.querySelectorAll("nav button").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const nuevaVista = btn.dataset.view;
-
-        // 🧹 SOLO cuando sales de Agendar Cita
-        if (vistaActual === "book" && nuevaVista !== "book") {
-            limpiarVistaAgendar();
-        }
-
-        vistaActual = nuevaVista;
-    });
-});
-
-
-
-
 
 
 
