@@ -251,10 +251,28 @@ async function addStylist() {
 /* ==========================
    DELETE STYLIST
 ========================== */
-async function deleteStylist() {
-    const id = document.getElementById("delete-stylist-id").value.trim();
+async function cargarEstilistas() {
+    const res = await fetch(`${window.API_URL}/estilistas`);
+    const estilistas = await res.json();
 
-    if (id === "") return alert("Ingresa un ID válido");
+    const select = document.getElementById("delete-estilista-select");
+    select.innerHTML = "<option value=''>Selecciona un estilista...</option>";
+
+    estilistas.forEach(e => {
+        select.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
+    });
+}
+
+async function deleteStylist() {
+    const select = document.getElementById("delete-estilista-select");
+    const id = select.value;
+
+    if (!id) {
+        alert("Selecciona un estilista");
+        return;
+    }
+
+    if (!confirm("¿Seguro que deseas eliminar este estilista?")) return;
 
     try {
         const response = await fetch(`${window.API_URL}/admin/stylists/delete`, {
@@ -265,10 +283,15 @@ async function deleteStylist() {
 
         const data = await response.json();
 
-        if (!response.ok) return alert(data.error);
+        if (!response.ok) {
+            alert(data.error);
+            return;
+        }
 
         alert("Estilista eliminado ✓");
-        document.getElementById("delete-stylist-id").value = "";
+
+        // Recargar lista
+        cargarEstilistas();
         loadStaff();
 
     } catch (error) {
