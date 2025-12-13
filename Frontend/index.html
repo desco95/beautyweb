@@ -38,10 +38,10 @@
     <!-- NAV BAR -->
     <nav class="nav solid-nav">
         <div class="nav-content">
-            <button class="active" onclick="showView('inicio')">🏠 Inicio</button>
-            <button onclick="showView('book')">📅 Agendar Cita</button>
-            <button onclick="showView('appointments')">📋 Mis Citas</button>
-            <button onclick="showView('admin')">⚙️ Administración</button>
+            <button data-view="inicio" class="active" onclick="showView('inicio')">🏠 Inicio</button>
+            <button data-view="book" onclick="showView('book')">📅 Agendar Cita</button>
+            <button data-view="appointments" onclick="showView('appointments')">📋 Mis Citas</button>
+            <button data-view="admin" onclick="showView('admin')">⚙️ Administración</button>
             <div class="nav-indicator"></div>
         </div>
     </nav>
