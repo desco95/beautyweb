@@ -218,6 +218,50 @@ function showView(id) {
     if (id === "appointments") cargarCitas();
 }
 
+const servicioEstilistas = {
+    "Corte de cabello": ["Lorena", "Maribel", "Alejandra", "Jessica"],
+    "Extensiones de pestañas": ["Maribel"],
+    "Extensiones de cabello": ["Lorena", "Alejandra"],
+    "Laminado de ceja": ["Maribel", "Lorena"],
+    "Lifting de pestañas": ["Maribel"],
+    "Maquillaje y peinado social": ["Alejandra"],
+    "Depilación facial (ceja, bozo)": ["Maribel", "Alejandra"],
+    "Uñas acrílicas": ["Jessica"],
+    "Gelish": ["Jessica"],
+    "Baño de acrílico": ["Lorena", "Maribel"],
+    "Pedicure": ["Lorena"],
+    "Manicure": ["Jessica"],
+    "Alaciados progresivos": ["Maribel"],
+    "Botox curly": ["Alejandra"],
+    "Acripie": ["Lorena"],
+    "Faciales": ["Lorena"]
+};
+
+function filtrarEstilistasPorServicio() {
+    const servicioSelect = document.getElementById("servicio1");
+    const estilistaSelect = document.getElementById("estilista");
+
+    const servicio = servicioSelect.value.toLowerCase();
+
+    // Limpiar opciones actuales
+    estilistaSelect.innerHTML = "<option value=''>Selecciona...</option>";
+
+    if (!servicio) return;
+
+    // Obtener estilistas para ese servicio
+    const estilistasDisponibles = servicioEstilistas[servicio] || [];
+
+    estilistasDisponibles.forEach(nombre => {
+        const option = document.createElement("option");
+        option.value = nombre;
+        option.textContent = nombre;
+        estilistaSelect.appendChild(option);
+    });
+}
+
+document.getElementById("servicio1").addEventListener("change", filtrarEstilistasPorServicio);
+
+
 async function bookAppointment(event) {
     event.preventDefault();
 
