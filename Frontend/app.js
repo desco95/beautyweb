@@ -237,30 +237,35 @@ const servicioEstilistas = {
     "Faciales": ["Lorena"]
 };
 
-function filtrarEstilistasPorServicio() {
-    const servicioSelect = document.getElementById("servicio1");
-    const estilistaSelect = document.getElementById("estilista");
+const servicioSelect = document.getElementById("servicio1");
+const estilistaSelect = document.getElementById("estilista");
 
-    const servicio = servicioSelect.value.toLowerCase();
+servicioSelect.addEventListener("change", () => {
+    const servicioElegido = servicioSelect.value;
 
-    // Limpiar opciones actuales
-    estilistaSelect.innerHTML = "<option value=''>Selecciona...</option>";
+    // Si el servicio tiene estilistas definidos
+    if (servicioEstilistas[servicioElegido]) {
+        const estilistasDisponibles = servicioEstilistas[servicioElegido];
 
-    if (!servicio) return;
+        // Guardar todas las opciones originales
+        const todasOpciones = Array.from(estilistaSelect.options);
 
-    // Obtener estilistas para ese servicio
-    const estilistasDisponibles = servicioEstilistas[servicio] || [];
+        estilistaSelect.innerHTML = "<option value=''>Selecciona...</option>";
 
-    estilistasDisponibles.forEach(nombre => {
-        const option = document.createElement("option");
-        option.value = nombre;
-        option.textContent = nombre;
-        estilistaSelect.appendChild(option);
-    });
-}
+        todasOpciones.forEach(opt => {
+            if (estilistasDisponibles.includes(opt.textContent)) {
+                const nuevaOpt = document.createElement("option");
+                nuevaOpt.value = opt.value;
+                nuevaOpt.textContent = opt.textContent;
+                estilistaSelect.appendChild(nuevaOpt);
+            }
+        });
 
-document.getElementById("servicio1").addEventListener("change", filtrarEstilistasPorServicio);
-
+    } else {
+        // Si el servicio no tiene restricciones, mostrar todos
+        cargarEstilistas(); // vuelve a cargar todos los estilistas desde fetch
+    }
+});
 
 async function bookAppointment(event) {
     event.preventDefault();
