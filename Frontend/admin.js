@@ -40,33 +40,97 @@ let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
    PENDING + CONFIRMED APPOINTMENTS
 ========================== */
 async function loadPendingAppointments() {
-    const pending = document.getElementById("pending-list");
-    const confirmed = document.getElementById("confirmed-list");
+    const pendingContainer = document.getElementById("pending-list");
+    const confirmedContainer = document.getElementById("confirmed-list");
 
-    pending.innerHTML = "<p>Cargando...</p>";
-    confirmed.innerHTML = "<p>Cargando...</p>";
+    pendingContainer.innerHTML = "<p>Cargando...</p>";
+    confirmedContainer.innerHTML = "<p>Cargando...</p>";
 
     try {
         const response = await fetch(`${window.API_URL}/citas/pendientes`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const citas = await response.json();
 
-        console.log("Citas recibidas:", citas); // Para debug
+        console.log("Citas recibidas:", citas);
 
-        pending.innerHTML = "";
-        confirmed.innerHTML = "";
+        pendingContainer.innerHTML = "";
+        confirmedContainer.innerHTML = "";
 
         if (!Array.isArray(citas) || citas.length === 0) {
-            pending.innerHTML = "<p>No hay citas pendientes</p>";
-            confirmed.innerHTML = "<p>No hay citas confirmadas</p>";
+            pendingContainer.innerHTML = "<p>No hay citas pendientes</p>";
+            confirmedContainer.innerHTML = "<p>No hay citas confirmadas</p>";
             return;
         }
 
+        // Crear un objeto para agrupar por mes
+        const citasPorMes = {};
+
         citas.forEach(cita => {
+            const fecha = new Date(cita.fecha);
+            const monthKey = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, "0")}`;
+
+            if (!citasPorMes[monthKey]) citasPorMes[monthKey] = [];
+            citasPorMes[monthKey].push(cita);
+        });
+
+        // Renderizar pendientes por mes
+        Object.keys(citasPorMes).sort().forEach(month => {
+            const monthHeader = document.createElement("h4");
+            monthHeader.textContent = `Citas pendientes - ${month}`;
+            pendingContainer.appendChild(monthHeader);
+
+            citasPorMes[month].forEach(cita => {
+                const card = document.createElement("div");
+                card.classList.add("appointment-card", "compact");
+
+                // Contenido compacto inicial
+                card.innerHTML = `
+                    <div class="card-summary">
+                        <strong>${cita.cliente}</strong> - ${cita.fecha}
+                    </div>
+                    <div class="card-details" style="display:none;">
+                        <p><strong>Servicio:</strong> ${cita.servicio}</p>
+                        <p><strong>Estilista:</strong> ${cita.estilista}</p>
+                        <p><strong>Hora:</strong> ${cita.hora}</p>
+                        <p><strong>Estado:</strong> ${cita.estado}</p>
+                    </div>
+                `;
+
+                // Toggle detalles al hacer clic
+                card.querySelector(".card-summary").addEventListener("click", () => {
+                    const details = card.querySelector(".card-details");
+                    details.style.display = details.style.display === "none" ? "block" : "none";
+                });
+
+                // Agregar botones solo si está pendiente
+                if (cita.estado === "Pendiente") {
+                    const actions = document.createElement("div");
+                    actions.classList.add("card-actions");
+
+                    const btnConfirmar = document.createElement("button");
+                    btnConfirmar.className = "btn-confirmar";
+                    btnConfirmar.textContent = "Confirmar";
+                    btnConfirmar.onclick = async () => await confirmarCita(cita.id);
+
+                    const btnRechazar = document.createElement("button");
+                    btnRechazar.className = "btn-rechazar";
+                    btnRechazar.textContent = "Rechazar";
+                    btnRechazar.onclick = async () => {
+                        const reason = prompt("Motivo del rechazo:");
+                        if (reason) await rechazarCita(cita.id, reason);
+                    };
+
+                    actions.appendChild(btnConfirmar);
+                    actions.appendChild(btnRechazar);
+                    card.appendChild(actions);
+                }
+
+                pendingContainer.appendChild(card);
+            });
+        });
+
+        // Confirmadas
+        citas.filter(c => c.estado === "Confirmada").forEach(cita => {
             const card = document.createElement("div");
             card.classList.add("appointment-card");
 
@@ -75,7 +139,6 @@ async function loadPendingAppointments() {
                     <h3>${cita.servicio}</h3>
                     <span class="status ${cita.estado.toLowerCase()}">${cita.estado}</span>
                 </div>
-
                 <div class="card-body">
                     <p><strong>Cliente:</strong> ${cita.cliente}</p>
                     <p><strong>Estilista:</strong> ${cita.estilista}</p>
@@ -83,56 +146,17 @@ async function loadPendingAppointments() {
                     <p><strong>Hora:</strong> ${cita.hora}</p>
                 </div>
             `;
-
-            if (cita.estado === "Pendiente") {
-                const actions = document.createElement("div");
-                actions.classList.add("card-actions");
-
-                const btnConfirmar = document.createElement("button");
-                btnConfirmar.className = "btn-confirmar";
-                btnConfirmar.textContent = "Confirmar";
-                btnConfirmar.onclick = async () => {
-                    console.log("Confirmando cita ID:", cita.id);
-                    await confirmarCita(cita.id);
-                };
-
-                const btnRechazar = document.createElement("button");
-                btnRechazar.className = "btn-rechazar";
-                btnRechazar.textContent = "Rechazar";
-                btnRechazar.onclick = async () => {
-                    const reason = prompt("Motivo del rechazo:");
-                    if (reason) {
-                        console.log("Rechazando cita ID:", cita.id);
-                        await rechazarCita(cita.id, reason);
-                    }
-                };
-
-                actions.appendChild(btnConfirmar);
-                actions.appendChild(btnRechazar);
-                card.appendChild(actions);
-                pending.appendChild(card);
-            }
-
-            if (cita.estado === "Confirmada") {
-                confirmed.appendChild(card);
-            }
+            confirmedContainer.appendChild(card);
         });
-
-        if (pending.innerHTML === "") {
-            pending.innerHTML = "<p>No hay citas pendientes</p>";
-        }
-        
-        if (confirmed.innerHTML === "") {
-            confirmed.innerHTML = "<p>No hay citas confirmadas</p>";
-        }
 
     } catch (error) {
         console.error("ERROR AL CARGAR CITAS:", error);
-        pending.innerHTML = `<p style="color: red;">Error al cargar citas: ${error.message}</p>`;
-        confirmed.innerHTML = "";
+        pendingContainer.innerHTML = `<p style="color:red;">Error al cargar citas: ${error.message}</p>`;
+        confirmedContainer.innerHTML = "";
     }
 }
 
+//confirmar cita
 async function confirmarCita(id) {
     try {
         console.log("Enviando confirmación para cita ID:", id);
