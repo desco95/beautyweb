@@ -219,7 +219,6 @@ function showView(id) {
 }
 
 const servicioEstilistas = {
-    "Corte de cabello": ["Lorena", "Maribel", "Alejandra", "Jessica"],
     "Extensiones de pestañas": ["Maribel"],
     "Extensiones de cabello": ["Lorena", "Alejandra"],
     "Laminado de ceja": ["Maribel", "Lorena"],
@@ -241,19 +240,17 @@ const servicioSelect = document.getElementById("servicio1");
 const estilistaSelect = document.getElementById("estilista");
 
 servicioSelect.addEventListener("change", () => {
-    const servicioElegido = servicioSelect.value;
+    const servicioElegido = servicioSelect.value.trim();
 
-    // Si el servicio tiene estilistas definidos
     if (servicioEstilistas[servicioElegido]) {
         const estilistasDisponibles = servicioEstilistas[servicioElegido];
 
-        // Guardar todas las opciones originales
         const todasOpciones = Array.from(estilistaSelect.options);
 
         estilistaSelect.innerHTML = "<option value=''>Selecciona...</option>";
 
         todasOpciones.forEach(opt => {
-            if (estilistasDisponibles.includes(opt.textContent)) {
+            if (estilistasDisponibles.includes(opt.textContent.trim())) {
                 const nuevaOpt = document.createElement("option");
                 nuevaOpt.value = opt.value;
                 nuevaOpt.textContent = opt.textContent;
@@ -262,10 +259,11 @@ servicioSelect.addEventListener("change", () => {
         });
 
     } else {
-        // Si el servicio no tiene restricciones, mostrar todos
-        cargarEstilistas(); // vuelve a cargar todos los estilistas desde fetch
+        // Mostrar todos si no hay restricción
+        cargarEstilistas();
     }
 });
+
 
 async function bookAppointment(event) {
     event.preventDefault();
