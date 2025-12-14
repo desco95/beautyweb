@@ -41,10 +41,7 @@ let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
 ========================== */
 async function loadPendingAppointments() {
     const pendingContainer = document.getElementById("pending-list");
-    const confirmedContainer = document.getElementById("confirmed-list");
-
     pendingContainer.innerHTML = "<p>Cargando...</p>";
-    confirmedContainer.innerHTML = "<p>Cargando...</p>";
 
     try {
         const response = await fetch(`${window.API_URL}/citas/pendientes`);
@@ -54,21 +51,19 @@ async function loadPendingAppointments() {
         console.log("Citas recibidas:", citas);
 
         pendingContainer.innerHTML = "";
-        confirmedContainer.innerHTML = "";
 
         if (!Array.isArray(citas) || citas.length === 0) {
             pendingContainer.innerHTML = "<p>No hay citas pendientes</p>";
-            confirmedContainer.innerHTML = "<p>No hay citas confirmadas</p>";
             return;
         }
 
-        // Crear un objeto para agrupar por mes
+        // Agrupar citas por mes
         const citasPorMes = {};
-
         citas.forEach(cita => {
+            if (cita.estado !== "Pendiente") return; // Solo pendientes
+
             const fecha = new Date(cita.fecha);
             const monthKey = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, "0")}`;
-
             if (!citasPorMes[monthKey]) citasPorMes[monthKey] = [];
             citasPorMes[monthKey].push(cita);
         });
@@ -102,57 +97,34 @@ async function loadPendingAppointments() {
                     details.style.display = details.style.display === "none" ? "block" : "none";
                 });
 
-                // Agregar botones solo si está pendiente
-                if (cita.estado === "Pendiente") {
-                    const actions = document.createElement("div");
-                    actions.classList.add("card-actions");
+                // Botones Confirmar / Rechazar
+                const actions = document.createElement("div");
+                actions.classList.add("card-actions");
 
-                    const btnConfirmar = document.createElement("button");
-                    btnConfirmar.className = "btn-confirmar";
-                    btnConfirmar.textContent = "Confirmar";
-                    btnConfirmar.onclick = async () => await confirmarCita(cita.id);
+                const btnConfirmar = document.createElement("button");
+                btnConfirmar.className = "btn-confirmar";
+                btnConfirmar.textContent = "Confirmar";
+                btnConfirmar.onclick = async () => await confirmarCita(cita.id);
 
-                    const btnRechazar = document.createElement("button");
-                    btnRechazar.className = "btn-rechazar";
-                    btnRechazar.textContent = "Rechazar";
-                    btnRechazar.onclick = async () => {
-                        const reason = prompt("Motivo del rechazo:");
-                        if (reason) await rechazarCita(cita.id, reason);
-                    };
+                const btnRechazar = document.createElement("button");
+                btnRechazar.className = "btn-rechazar";
+                btnRechazar.textContent = "Rechazar";
+                btnRechazar.onclick = async () => {
+                    const reason = prompt("Motivo del rechazo:");
+                    if (reason) await rechazarCita(cita.id, reason);
+                };
 
-                    actions.appendChild(btnConfirmar);
-                    actions.appendChild(btnRechazar);
-                    card.appendChild(actions);
-                }
+                actions.appendChild(btnConfirmar);
+                actions.appendChild(btnRechazar);
+                card.appendChild(actions);
 
                 pendingContainer.appendChild(card);
             });
         });
 
-        // Confirmadas
-        citas.filter(c => c.estado === "Confirmada").forEach(cita => {
-            const card = document.createElement("div");
-            card.classList.add("appointment-card");
-
-            card.innerHTML = `
-                <div class="card-header">
-                    <h3>${cita.servicio}</h3>
-                    <span class="status ${cita.estado.toLowerCase()}">${cita.estado}</span>
-                </div>
-                <div class="card-body">
-                    <p><strong>Cliente:</strong> ${cita.cliente}</p>
-                    <p><strong>Estilista:</strong> ${cita.estilista}</p>
-                    <p><strong>Fecha:</strong> ${cita.fecha}</p>
-                    <p><strong>Hora:</strong> ${cita.hora}</p>
-                </div>
-            `;
-            confirmedContainer.appendChild(card);
-        });
-
     } catch (error) {
         console.error("ERROR AL CARGAR CITAS:", error);
         pendingContainer.innerHTML = `<p style="color:red;">Error al cargar citas: ${error.message}</p>`;
-        confirmedContainer.innerHTML = "";
     }
 }
 
