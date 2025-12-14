@@ -585,7 +585,7 @@ async function cargarServicios() {
 
     servicios.forEach(s => {
         select.innerHTML += `
-            <option value="${s.nombre}">${s.nombre} - $${s.precio}</option>
+            <option value="${s.nombre}">${s.nombre}</option>
         `;
     });
 }
