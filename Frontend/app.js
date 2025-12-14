@@ -239,30 +239,40 @@ const servicioEstilistas = {
 const servicioSelect = document.getElementById("servicio1");
 const estilistaSelect = document.getElementById("estilista");
 
+// Guardar opciones originales al cargar
+const todasOpcionesOriginales = Array.from(estilistaSelect.options).map(opt => ({
+    value: opt.value,
+    text: opt.textContent.trim()
+}));
+
 servicioSelect.addEventListener("change", () => {
     const servicioElegido = servicioSelect.value.trim();
+
+    // Limpiar siempre antes de filtrar
+    estilistaSelect.innerHTML = "<option value=''>Selecciona...</option>";
 
     if (servicioEstilistas[servicioElegido]) {
         const estilistasDisponibles = servicioEstilistas[servicioElegido];
 
-        const todasOpciones = Array.from(estilistaSelect.options);
-
-        estilistaSelect.innerHTML = "<option value=''>Selecciona...</option>";
-
-        todasOpciones.forEach(opt => {
-            if (estilistasDisponibles.includes(opt.textContent.trim())) {
+        todasOpcionesOriginales.forEach(opt => {
+            if (estilistasDisponibles.includes(opt.text)) {
                 const nuevaOpt = document.createElement("option");
                 nuevaOpt.value = opt.value;
-                nuevaOpt.textContent = opt.textContent;
+                nuevaOpt.textContent = opt.text;
                 estilistaSelect.appendChild(nuevaOpt);
             }
         });
-
     } else {
-        // Mostrar todos si no hay restricción
-        cargarEstilistas();
+        // Si no hay filtro, mostrar todas las originales
+        todasOpcionesOriginales.forEach(opt => {
+            const nuevaOpt = document.createElement("option");
+            nuevaOpt.value = opt.value;
+            nuevaOpt.textContent = opt.text;
+            estilistaSelect.appendChild(nuevaOpt);
+        });
     }
 });
+
 
 
 async function bookAppointment(event) {
