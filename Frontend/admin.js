@@ -41,7 +41,10 @@ let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
 ========================== */
 async function loadPendingAppointments() {
     const pendingContainer = document.getElementById("pending-list");
+    const confirmedContainer = document.getElementById("confirmed-list");
+
     pendingContainer.innerHTML = "<p>Cargando...</p>";
+    confirmedContainer.innerHTML = "<p>Cargando...</p>";
 
     try {
         const response = await fetch(`${window.API_URL}/citas/pendientes`);
@@ -51,34 +54,38 @@ async function loadPendingAppointments() {
         console.log("Citas recibidas:", citas);
 
         pendingContainer.innerHTML = "";
+        confirmedContainer.innerHTML = "";
 
         if (!Array.isArray(citas) || citas.length === 0) {
             pendingContainer.innerHTML = "<p>No hay citas pendientes</p>";
+            confirmedContainer.innerHTML = "<p>No hay citas confirmadas</p>";
             return;
         }
 
-        // Agrupar citas por mes
-        const citasPorMes = {};
-        citas.forEach(cita => {
-            if (cita.estado !== "Pendiente") return; // Solo pendientes
+        // Filtrar pendientes y confirmadas
+        const pendientes = citas.filter(c => c.estado === "Pendiente");
+        const confirmadas = citas.filter(c => c.estado === "Confirmada");
 
+        // Agrupar pendientes por mes
+        const pendientesPorMes = {};
+        pendientes.forEach(cita => {
             const fecha = new Date(cita.fecha);
             const monthKey = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, "0")}`;
-            if (!citasPorMes[monthKey]) citasPorMes[monthKey] = [];
-            citasPorMes[monthKey].push(cita);
+            if (!pendientesPorMes[monthKey]) pendientesPorMes[monthKey] = [];
+            pendientesPorMes[monthKey].push(cita);
         });
 
-        // Renderizar pendientes por mes
-        Object.keys(citasPorMes).sort().forEach(month => {
+        // Renderizar pendientes compactos
+        Object.keys(pendientesPorMes).sort().forEach(month => {
             const monthHeader = document.createElement("h4");
             monthHeader.textContent = `Citas pendientes - ${month}`;
             pendingContainer.appendChild(monthHeader);
 
-            citasPorMes[month].forEach(cita => {
+            pendientesPorMes[month].forEach(cita => {
                 const card = document.createElement("div");
                 card.classList.add("appointment-card", "compact");
 
-                // Contenido compacto inicial
+                // Solo nombre y fecha
                 card.innerHTML = `
                     <div class="card-summary">
                         <strong>${cita.cliente}</strong> - ${cita.fecha}
@@ -97,7 +104,7 @@ async function loadPendingAppointments() {
                     details.style.display = details.style.display === "none" ? "block" : "none";
                 });
 
-                // Botones Confirmar / Rechazar
+                // Botones solo para pendientes
                 const actions = document.createElement("div");
                 actions.classList.add("card-actions");
 
@@ -122,9 +129,34 @@ async function loadPendingAppointments() {
             });
         });
 
+        // Renderizar confirmadas con detalle completo
+        confirmadas.forEach(cita => {
+            const card = document.createElement("div");
+            card.classList.add("appointment-card");
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <h3>${cita.servicio}</h3>
+                    <span class="status ${cita.estado.toLowerCase()}">${cita.estado}</span>
+                </div>
+                <div class="card-body">
+                    <p><strong>Cliente:</strong> ${cita.cliente}</p>
+                    <p><strong>Estilista:</strong> ${cita.estilista}</p>
+                    <p><strong>Fecha:</strong> ${cita.fecha}</p>
+                    <p><strong>Hora:</strong> ${cita.hora}</p>
+                </div>
+            `;
+
+            confirmedContainer.appendChild(card);
+        });
+
+        if (pendingContainer.innerHTML === "") pendingContainer.innerHTML = "<p>No hay citas pendientes</p>";
+        if (confirmedContainer.innerHTML === "") confirmedContainer.innerHTML = "<p>No hay citas confirmadas</p>";
+
     } catch (error) {
         console.error("ERROR AL CARGAR CITAS:", error);
         pendingContainer.innerHTML = `<p style="color:red;">Error al cargar citas: ${error.message}</p>`;
+        confirmedContainer.innerHTML = "";
     }
 }
 
