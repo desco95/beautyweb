@@ -36,6 +36,21 @@ userDisplay.appendChild(registerBtn);
 userDisplay.appendChild(logoutBtn);
 
 /* ============================================
+   VALIDACIONES
+============================================ */
+function validarTelefono(telefono) {
+    return /^\d{10}$/.test(telefono);
+}
+
+function validarNombre(nombre) {
+    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,20}$/.test(nombre);
+}
+
+function validarContrasena(contrasena) {
+    return contrasena.length >= 6;
+}
+
+/* ============================================
    ACTUALIZAR INTERFAZ DE USUARIO
 ============================================ */
 function updateUserUI() {
@@ -52,21 +67,6 @@ function updateUserUI() {
         registerBtn.style.display = "inline-block";
         logoutBtn.style.display = "none";
     }
-}
-
-/* ============================================
-   VALIDACIONES
-============================================ */
-function validarTelefono(telefono) {
-    return /^[0-9]{10}$/.test(telefono);
-}
-
-function validarNombre(nombre) {
-    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,20}$/.test(nombre);
-}
-
-function validarContrasena(contrasena) {
-    return contrasena.length >= 6;
 }
 
 /* ============================================
@@ -106,12 +106,13 @@ loginSubmit.addEventListener("click", () => {
     const contrasena = loginPass.value.trim();
 
     if (!telefono || !contrasena) {
-        alert("⚠️ Completa todos los campos");
+        alert("❌ Completa todos los campos");
         return;
     }
 
     if (!validarTelefono(telefono)) {
-        alert("⚠️ Teléfono inválido (debe ser 10 dígitos numéricos)");
+        alert("❌ El teléfono debe tener exactamente 10 dígitos");
+        loginEmail.focus();
         return;
     }
 
@@ -136,11 +137,11 @@ loginSubmit.addEventListener("click", () => {
         updateUserUI();
         loginModal.classList.remove("show");
         cargarCitas();
+        toggleAdminNavbar(telefono);
 
         loginEmail.value = "";
         loginPass.value = "";
-        
-        toggleAdminNavbar(telefono);
+
         alert("✅ Sesión iniciada correctamente");
     })
     .catch(() => alert("❌ Error de conexión con el servidor"));
@@ -155,22 +156,25 @@ registerSubmit.addEventListener("click", () => {
     const contrasena = registerPass.value.trim();
 
     if (!nombre || !telefono || !contrasena) {
-        alert("⚠️ Completa todos los campos");
+        alert("❌ Completa todos los campos");
         return;
     }
 
     if (!validarNombre(nombre)) {
-        alert("⚠️ Nombre inválido (solo letras, máx 20 caracteres)");
+        alert("❌ El nombre solo debe contener letras y espacios (máximo 20 caracteres)");
+        registerName.focus();
         return;
     }
 
     if (!validarTelefono(telefono)) {
-        alert("⚠️ Teléfono inválido (debe ser 10 dígitos numéricos)");
+        alert("❌ El teléfono debe tener exactamente 10 dígitos numéricos");
+        registerEmail.focus();
         return;
     }
 
     if (!validarContrasena(contrasena)) {
-        alert("⚠️ La contraseña debe tener al menos 6 caracteres");
+        alert("❌ La contraseña debe tener al menos 6 caracteres");
+        registerPass.focus();
         return;
     }
 
@@ -221,23 +225,31 @@ function showView(id) {
 }
 
 /* ============================================
-   FILTRADO DE ESTILISTAS POR SERVICIO
+   CARGAR SERVICIOS Y ESTILISTAS
 ============================================ */
 const servicioSelect = document.getElementById("servicio1");
 const estilistaSelect = document.getElementById("estilista");
 
+async function cargarServicios() {
+    const res = await fetch(`${window.API_URL}/servicios`);
+    const servicios = await res.json();
+
+    servicioSelect.innerHTML = "<option value=''>Selecciona un servicio...</option>";
+    servicios.forEach(s => {
+        servicioSelect.innerHTML += `<option value="${s.nombre}">${s.nombre}</option>`;
+    });
+}
+
+// Cargar estilistas según servicio seleccionado
 servicioSelect.addEventListener("change", async () => {
     const servicioElegido = servicioSelect.value.trim();
 
     estilistaSelect.innerHTML = "<option value=''>Selecciona...</option>";
 
-    if (!servicioElegido) {
-        cargarEstilistas();
-        return;
-    }
+    if (!servicioElegido) return;
 
     try {
-        const res = await fetch(`${window.API_URL}/estilistas/servicio/${encodeURIComponent(servicioElegido)}`);
+        const res = await fetch(`${window.API_URL}/estilistas/por-servicio/${encodeURIComponent(servicioElegido)}`);
         const estilistas = await res.json();
 
         if (estilistas.length === 0) {
@@ -246,14 +258,10 @@ servicioSelect.addEventListener("change", async () => {
         }
 
         estilistas.forEach(e => {
-            const opt = document.createElement("option");
-            opt.value = e.id;
-            opt.textContent = e.nombre;
-            estilistaSelect.appendChild(opt);
+            estilistaSelect.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
         });
-
     } catch (error) {
-        console.error("Error cargando estilistas por servicio:", error);
+        console.error("Error cargando estilistas:", error);
     }
 });
 
@@ -264,45 +272,26 @@ async function bookAppointment(event) {
     event.preventDefault();
 
     if (!currentUser) {
-        alert("⚠️ Debes iniciar sesión para agendar");
+        alert("❌ Debes iniciar sesión para agendar");
         return;
     }
 
-    const nombre = document.getElementById("book-name").value.trim();
-    const telefono = document.getElementById("book-phone").value.trim();
-    const servicio = document.getElementById("servicio1").value;
-    const estilista = document.getElementById("estilista").value;
     const fecha = document.getElementById("book-date").value;
     const hora = document.getElementById("book-time").value;
-
-    // Validaciones
-    if (!validarNombre(nombre)) {
-        alert("⚠️ Nombre inválido (solo letras, máx 20 caracteres)");
-        return;
-    }
-
-    if (!validarTelefono(telefono)) {
-        alert("⚠️ Teléfono inválido (debe ser 10 dígitos numéricos)");
-        return;
-    }
-
-    if (!servicio || !estilista || !fecha || !hora) {
-        alert("⚠️ Completa todos los campos obligatorios");
-        return;
-    }
+    const estilista = document.getElementById("estilista").value;
 
     const fechaSeleccionada = new Date(fecha);
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
     if (fechaSeleccionada < hoy) {
-        alert("⚠️ No puedes agendar citas en fechas pasadas");
+        alert("❌ No puedes agendar citas en fechas pasadas");
         return;
     }
 
     const cita = {
         usuario_id: currentUser.id,
-        servicio: servicio,
+        servicio: document.getElementById("servicio1").value,
         estilista: estilista,
         fecha: fecha,
         hora: hora,
@@ -327,16 +316,14 @@ async function bookAppointment(event) {
     cargarCitas();
 }
 
+/* ============================================
+   RENDERIZAR CITAS
+============================================ */
 function renderAppointments(telefono, appointments) {
-    if (!Array.isArray(appointments)) {
-        console.error("ERROR: appointments no es un array", appointments);
-        return;
-    }
-
     const container = document.getElementById("appointments-list");
     container.innerHTML = "";
 
-    if (appointments.length === 0) {
+    if (!Array.isArray(appointments) || appointments.length === 0) {
         container.innerHTML = "<p>No tienes citas agendadas.</p>";
         return;
     }
@@ -364,7 +351,7 @@ function renderAppointments(telefono, appointments) {
 }
 
 /* ============================================
-   BLOQUEAR FECHAS PASADAS
+   BLOQUEAR FECHAS Y CARGAR HORARIOS
 ============================================ */
 function establecerFechaMinima() {
     const inputFecha = document.getElementById("book-date");
@@ -381,9 +368,6 @@ function establecerFechaMinima() {
     }
 }
 
-/* ============================================
-   CARGAR HORARIOS DISPONIBLES
-============================================ */
 async function cargarHorariosDisponibles() {
     const estilista = document.getElementById("estilista").value;
     const fecha = document.getElementById("book-date").value;
@@ -394,17 +378,20 @@ async function cargarHorariosDisponibles() {
     }
 
     try {
+        // Obtener horarios bloqueados
         const resBloqueados = await fetch(`${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`);
         const bloqueados = await resBloqueados.json();
 
-        const resOcupados = await fetch(`${window.API_URL}/horarios_ocupados/${estilista}/${fecha}`);
-        const ocupados = await resOcupados.json();
-
+        // Verificar si el día está completamente bloqueado
         if (bloqueados.length > 0) {
             selectHora.innerHTML = '<option value="">Este día no está disponible</option>';
             selectHora.disabled = true;
             return;
         }
+
+        // Obtener horarios ocupados
+        const resOcupados = await fetch(`${window.API_URL}/horarios_ocupados/${estilista}/${fecha}`);
+        const ocupados = await resOcupados.json();
 
         const todosHorarios = [
             "09:00", "10:00", "11:00", "12:00", 
@@ -446,48 +433,17 @@ function convertirA12Horas(hora24) {
 document.addEventListener("DOMContentLoaded", () => {
     establecerFechaMinima();
     
-    const estilistaSelect = document.getElementById("estilista");
+    const estilistaSelectElem = document.getElementById("estilista");
     const fechaInput = document.getElementById("book-date");
     
-    if (estilistaSelect) {
-        estilistaSelect.addEventListener("change", cargarHorariosDisponibles);
+    if (estilistaSelectElem) {
+        estilistaSelectElem.addEventListener("change", cargarHorariosDisponibles);
     }
     
     if (fechaInput) {
         fechaInput.addEventListener("change", cargarHorariosDisponibles);
     }
-
-    // Validación en tiempo real para nombre
-    document.getElementById("book-name").addEventListener("input", function () {
-        this.value = this.value
-            .replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
-            .slice(0, 20);
-    });
-
-    // Validación en tiempo real para teléfono
-    document.getElementById("book-phone").addEventListener("input", function () {
-        this.value = this.value.replace(/\D/g, "").slice(0, 10);
-    });
-
-    // Validación para inputs de login/registro
-    loginEmail.addEventListener("input", function() {
-        this.value = this.value.replace(/\D/g, "").slice(0, 10);
-    });
-
-    registerEmail.addEventListener("input", function() {
-        this.value = this.value.replace(/\D/g, "").slice(0, 10);
-    });
-
-    registerName.addEventListener("input", function() {
-        this.value = this.value
-            .replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
-            .slice(0, 20);
-    });
 });
-
-window.onload = () => {
-    updateUserUI();
-};
 
 /* ============================================
    ADMIN
@@ -552,21 +508,17 @@ document.addEventListener("DOMContentLoaded", initCarousel);
 const btn = document.getElementById("toggle-services-btn");
 const box = document.getElementById("servicios-container");
 
-if (btn && box) {
-    btn.addEventListener("click", () => {
-        box.classList.toggle("expanded");
+btn.addEventListener("click", () => {
+    box.classList.toggle("expanded");
 
-        if (box.classList.contains("expanded")) {
-            btn.textContent = "Ver menos";
-        } else {
-            btn.textContent = "Ver más";
-        }
-    });
-}
+    if (box.classList.contains("expanded")) {
+        btn.textContent = "Ver menos";
+    } else {
+        btn.textContent = "Ver más";
+    }
+});
 
-/* ============================
-   SHAPES
-============================ */
+// Shapes
 function createShapes() {
     const container = document.querySelector(".floating-shapes");
     if (!container) return;
@@ -595,78 +547,80 @@ function createShapes() {
 
 createShapes();
 
-/* ============================
-   CARGAR SERVICIOS Y ESTILISTAS
-============================ */
-async function cargarServicios() {
-    const res = await fetch(`${window.API_URL}/servicios`);
-    const servicios = await res.json();
-
-    const select = document.getElementById("servicio1");
-    select.innerHTML = "<option value=''>Selecciona un servicio...</option>";
-
-    servicios.forEach(s => {
-        select.innerHTML += `
-            <option value="${s.nombre}">${s.nombre}</option>
-        `;
-    });
-}
-
 cargarServicios();
-
-async function cargarEstilistas() {
-    const res = await fetch(`${window.API_URL}/estilistas`);
-    const estilistas = await res.json();
-
-    const select = document.getElementById("estilista");
-    select.innerHTML = "<option value=''>Selecciona...</option>";
-
-    estilistas.forEach(e => {
-        select.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
-    });
-}
-
-cargarEstilistas();
 
 async function cargarCitas() {
     if (!currentUser || !currentUser.phone) {
         console.warn("No hay usuario logeado");
         return;
     }
+    
     const telefono = currentUser.phone;
+    
     try {
         const resp = await fetch(`${window.API_URL}/citas_usuario/${telefono}`);
         const data = await resp.json();
+        
         if (!Array.isArray(data)) {
             console.error("Error cargando citas:", data);
             return;
         }
+        
         renderAppointments(telefono, data);
     } catch (err) {
         console.error("Error cargando citas:", err);
     }
 }
 
-/* ============================
-   LIMPIAR VISTA AL CAMBIAR
-============================ */
+// Validación de formulario de agendar
+document.getElementById("book-form").addEventListener("submit", function (e) {
+    const telefono = document.getElementById("book-phone")?.value.trim() || "";
+    const nombre = document.getElementById("book-name")?.value.trim() || "";
+
+    if (nombre && !validarNombre(nombre)) {
+        e.preventDefault();
+        alert("❌ El nombre solo puede contener letras y máximo 20 caracteres.");
+        return;
+    }
+
+    if (telefono && !validarTelefono(telefono)) {
+        e.preventDefault();
+        alert("❌ El teléfono debe contener EXACTAMENTE 10 números.");
+        return;
+    }
+});
+
+// Solo números en teléfono
+document.getElementById("login-email").addEventListener("input", function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+});
+
+document.getElementById("register-email").addEventListener("input", function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+});
+
+// Solo letras en nombre
+document.getElementById("register-name").addEventListener("input", function () {
+    this.value = this.value
+        .replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
+        .slice(0, 20);
+});
+
 const vistaBook = document.getElementById("book");
 
-if (vistaBook) {
-    const observer = new MutationObserver(() => {
-        const visible = vistaBook.classList.contains("active") ||
-                        vistaBook.style.display === "block";
+const observer = new MutationObserver(() => {
+    const visible = vistaBook.classList.contains("active") ||
+                    vistaBook.style.display === "block";
 
-        if (!visible) {
-            limpiarVistaAgendar();
-        }
-    });
+    if (!visible) {
+        limpiarVistaAgendar();
+    }
+});
 
-    observer.observe(vistaBook, {
-        attributes: true,
-        attributeFilter: ["class", "style"]
-    });
-}
+observer.observe(vistaBook, {
+    attributes: true,
+    attributeFilter: ["class", "style"]
+});
 
 function limpiarVistaAgendar() {
     const vista = document.getElementById("book");
@@ -687,9 +641,6 @@ function limpiarVistaAgendar() {
         .forEach(el => el.classList.remove("active", "selected", "error", "success"));
 }
 
-/* ============================
-   ADMIN ACCESS
-============================ */
 const ADMIN_PHONE = "4775556666";
 
 function toggleAdminNavbar(phone) {
@@ -701,3 +652,7 @@ function toggleAdminNavbar(phone) {
         adminBtn.style.display = "none";
     }
 }
+
+window.onload = () => {
+    updateUserUI();
+};
