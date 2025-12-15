@@ -201,6 +201,7 @@ registerSubmit.addEventListener("click", () => {
 logoutBtn.addEventListener("click", () => {
     currentUser = null;
     updateUserUI();
+   document.getElementById("admin-btn").style.display = "none";
 });
 
 /* ============================================
@@ -735,6 +736,8 @@ function toggleAdminNavbar(phone) {
         adminBtn.style.display = "none";
     }
 }
+
+
 /* ============================================================
 FIN
 ==============================*/
