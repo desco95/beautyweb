@@ -732,3 +732,8 @@ textarea {
     font-size: 15px;
     color: #444;
 }
+
+#admin-btn {
+    display: none;
+}
+
