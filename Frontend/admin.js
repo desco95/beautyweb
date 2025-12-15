@@ -14,14 +14,14 @@ function showAdminView(view) {
 
     if (view === "horarios") {
         loadBlockStylists();
-       cargarEstilistas();
-
+        cargarEstilistas();
     }
 
     if (view === "inicio") {
         loadTodayCount();
         loadPendingCount();
         loadConfirmedMonthCount();
+        loadSatisfaccion();
     }
 
     if (view === "proximas") {
@@ -31,13 +31,10 @@ function showAdminView(view) {
 
 showAdminView("inicio");
 
-/* ==========================
-   LOAD DATA (localStorage backup)
-========================== */
 let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
 
 /* ==========================
-   PENDING + CONFIRMED APPOINTMENTS
+   PENDING + CONFIRMED APPOINTMENTS CON INFO DESPLEGABLE
 ========================== */
 async function loadPendingAppointments() {
     const pendingContainer = document.getElementById("pending-list");
@@ -51,8 +48,6 @@ async function loadPendingAppointments() {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const citas = await response.json();
 
-        console.log("Citas recibidas:", citas);
-
         pendingContainer.innerHTML = "";
         confirmedContainer.innerHTML = "";
 
@@ -62,11 +57,10 @@ async function loadPendingAppointments() {
             return;
         }
 
-        // Filtrar pendientes y confirmadas
         const pendientes = citas.filter(c => c.estado === "Pendiente");
         const confirmadas = citas.filter(c => c.estado === "Confirmada");
 
-        // Agrupar pendientes por mes
+        // ===== PENDIENTES CON TRIÁNGULO DESPLEGABLE =====
         const pendientesPorMes = {};
         pendientes.forEach(cita => {
             const fecha = new Date(cita.fecha);
@@ -75,38 +69,51 @@ async function loadPendingAppointments() {
             pendientesPorMes[monthKey].push(cita);
         });
 
-        // Renderizar pendientes compactos
         Object.keys(pendientesPorMes).sort().forEach(month => {
             const monthHeader = document.createElement("h4");
             monthHeader.textContent = `Citas pendientes - ${month}`;
+            monthHeader.style.marginTop = "20px";
             pendingContainer.appendChild(monthHeader);
 
             pendientesPorMes[month].forEach(cita => {
                 const card = document.createElement("div");
-                card.classList.add("appointment-card", "compact");
+                card.classList.add("appointment-card");
+                card.style.cursor = "pointer";
 
-                // Solo nombre y fecha
+                // Resumen compacto con triángulo
                 card.innerHTML = `
-                    <div class="card-summary">
-                        <strong>${cita.cliente}</strong> - ${cita.fecha}
+                    <div class="card-summary" style="display: flex; align-items: center; gap: 10px;">
+                        <span class="triangle" style="font-size: 18px; transition: transform 0.3s;">▶</span>
+                        <div>
+                            <strong>${cita.servicio}</strong><br>
+                            <span style="color: #666;">Cliente: ${cita.cliente} | Fecha: ${cita.fecha}</span>
+                        </div>
                     </div>
-                    <div class="card-details" style="display:none;">
-                        <p><strong>Servicio:</strong> ${cita.servicio}</p>
+                    <div class="card-details" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
                         <p><strong>Estilista:</strong> ${cita.estilista}</p>
                         <p><strong>Hora:</strong> ${cita.hora}</p>
+                        <p><strong>Teléfono:</strong> ${cita.telefono}</p>
                         <p><strong>Estado:</strong> ${cita.estado}</p>
                     </div>
                 `;
 
                 // Toggle detalles al hacer clic
-                card.querySelector(".card-summary").addEventListener("click", () => {
-                    const details = card.querySelector(".card-details");
-                    details.style.display = details.style.display === "none" ? "block" : "none";
+                const summary = card.querySelector(".card-summary");
+                const details = card.querySelector(".card-details");
+                const triangle = card.querySelector(".triangle");
+
+                summary.addEventListener("click", () => {
+                    const isHidden = details.style.display === "none";
+                    details.style.display = isHidden ? "block" : "none";
+                    triangle.style.transform = isHidden ? "rotate(90deg)" : "rotate(0deg)";
                 });
 
-                // Botones solo para pendientes
+                // Botones para confirmar/rechazar
                 const actions = document.createElement("div");
                 actions.classList.add("card-actions");
+                actions.style.marginTop = "15px";
+                actions.style.display = "flex";
+                actions.style.gap = "10px";
 
                 const btnConfirmar = document.createElement("button");
                 btnConfirmar.className = "btn-confirmar";
@@ -129,29 +136,91 @@ async function loadPendingAppointments() {
             });
         });
 
-        // Renderizar confirmadas con detalle completo
-        confirmadas.forEach(cita => {
-            const card = document.createElement("div");
-            card.classList.add("appointment-card");
-
-            card.innerHTML = `
-                <div class="card-header">
-                    <h3>${cita.servicio}</h3>
-                    <span class="status ${cita.estado.toLowerCase()}">${cita.estado}</span>
-                </div>
-                <div class="card-body">
-                    <p><strong>Cliente:</strong> ${cita.cliente}</p>
-                    <p><strong>Estilista:</strong> ${cita.estilista}</p>
-                    <p><strong>Fecha:</strong> ${cita.fecha}</p>
-                    <p><strong>Hora:</strong> ${cita.hora}</p>
-                </div>
+        // ===== CONFIRMADAS CON ORDEN Y FILTRO =====
+        if (confirmadas.length > 0) {
+            // Controles de ordenamiento
+            const controlsDiv = document.createElement("div");
+            controlsDiv.style.marginBottom = "15px";
+            controlsDiv.style.display = "flex";
+            controlsDiv.style.gap = "10px";
+            controlsDiv.innerHTML = `
+                <button id="orden-fecha" class="btn-orden active-orden" style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ddd; background: #ff4fa1; color: white; cursor: pointer;">
+                    Por fecha y hora
+                </button>
+                <button id="orden-reciente" class="btn-orden" style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ddd; background: white; color: #333; cursor: pointer;">
+                    Última confirmada
+                </button>
             `;
+            confirmedContainer.appendChild(controlsDiv);
 
-            confirmedContainer.appendChild(card);
-        });
+            const listaConfirmadas = document.createElement("div");
+            listaConfirmadas.id = "lista-confirmadas";
+            confirmedContainer.appendChild(listaConfirmadas);
+
+            // Función para renderizar confirmadas
+            function renderConfirmadas(orden) {
+                let citasOrdenadas = [...confirmadas];
+                
+                if (orden === "fecha") {
+                    citasOrdenadas.sort((a, b) => {
+                        const fechaA = new Date(a.fecha + " " + a.hora);
+                        const fechaB = new Date(b.fecha + " " + b.hora);
+                        return fechaA - fechaB;
+                    });
+                } else {
+                    // Orden inverso (últimas confirmadas primero)
+                    citasOrdenadas.reverse();
+                }
+
+                listaConfirmadas.innerHTML = "";
+                citasOrdenadas.forEach(cita => {
+                    const card = document.createElement("div");
+                    card.classList.add("appointment-card");
+
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <h3>${cita.servicio}</h3>
+                            <span class="status confirmada">Confirmada</span>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Cliente:</strong> ${cita.cliente}</p>
+                            <p><strong>Teléfono:</strong> ${cita.telefono}</p>
+                            <p><strong>Estilista:</strong> ${cita.estilista}</p>
+                            <p><strong>Fecha:</strong> ${cita.fecha}</p>
+                            <p><strong>Hora:</strong> ${cita.hora}</p>
+                        </div>
+                    `;
+
+                    listaConfirmadas.appendChild(card);
+                });
+            }
+
+            // Event listeners para botones de orden
+            document.getElementById("orden-fecha").addEventListener("click", function() {
+                renderConfirmadas("fecha");
+                document.querySelectorAll(".btn-orden").forEach(b => {
+                    b.style.background = "white";
+                    b.style.color = "#333";
+                });
+                this.style.background = "#ff4fa1";
+                this.style.color = "white";
+            });
+
+            document.getElementById("orden-reciente").addEventListener("click", function() {
+                renderConfirmadas("reciente");
+                document.querySelectorAll(".btn-orden").forEach(b => {
+                    b.style.background = "white";
+                    b.style.color = "#333";
+                });
+                this.style.background = "#ff4fa1";
+                this.style.color = "white";
+            });
+
+            // Renderizar por defecto
+            renderConfirmadas("fecha");
+        }
 
         if (pendingContainer.innerHTML === "") pendingContainer.innerHTML = "<p>No hay citas pendientes</p>";
-        if (confirmedContainer.innerHTML === "") confirmedContainer.innerHTML = "<p>No hay citas confirmadas</p>";
 
     } catch (error) {
         console.error("ERROR AL CARGAR CITAS:", error);
@@ -160,18 +229,14 @@ async function loadPendingAppointments() {
     }
 }
 
-//confirmar cita
 async function confirmarCita(id) {
     try {
-        console.log("Enviando confirmación para cita ID:", id);
-        
         const response = await fetch(`${window.API_URL}/citas/confirmar/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" }
         });
 
         const data = await response.json();
-        console.log("Respuesta del servidor:", data);
 
         if (response.ok) {
             alert("✓ Cita confirmada");
@@ -191,8 +256,6 @@ async function confirmarCita(id) {
 
 async function rechazarCita(id, motivo) {
     try {
-        console.log("Enviando rechazo para cita ID:", id);
-        
         const response = await fetch(`${window.API_URL}/citas/rechazar/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -200,7 +263,6 @@ async function rechazarCita(id, motivo) {
         });
 
         const data = await response.json();
-        console.log("Respuesta del servidor:", data);
 
         if (response.ok) {
             alert("✓ Cita rechazada");
@@ -251,18 +313,21 @@ async function loadStaff() {
 }
 
 /* ==========================
-   ADD STYLIST
+   ADD STYLIST CON SERVICIOS
 ========================== */
 async function addStylist() {
     const name = document.getElementById("new-stylist-name").value.trim();
+    const serviciosCheckboxes = document.querySelectorAll('input[name="servicios"]:checked');
+    const servicios = Array.from(serviciosCheckboxes).map(cb => parseInt(cb.value));
 
     if (name === "") return alert("Ingresa un nombre válido");
+    if (servicios.length === 0) return alert("Selecciona al menos un servicio");
 
     try {
         const response = await fetch(`${window.API_URL}/admin/stylists/add`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nombre: name })
+            body: JSON.stringify({ nombre: name, servicios: servicios })
         });
 
         const data = await response.json();
@@ -271,6 +336,7 @@ async function addStylist() {
 
         alert("Estilista agregado ✓");
         document.getElementById("new-stylist-name").value = "";
+        serviciosCheckboxes.forEach(cb => cb.checked = false);
         loadStaff();
 
     } catch (error) {
@@ -303,8 +369,6 @@ async function cargarEstilistas() {
                 </option>
             `;
         });
-       console.log("Cargando estilistas para eliminar");
-
 
     } catch (error) {
         console.error("Error cargando estilistas:", error);
@@ -333,8 +397,6 @@ async function deleteStylist() {
         if (!response.ok) return alert(data.error);
 
         alert("Estilista eliminado ✓");
-
-        // Refrescar UI
         cargarEstilistas();
         loadStaff();
 
@@ -343,9 +405,8 @@ async function deleteStylist() {
     }
 }
 
-
 /* ===================================================
-   CARGAR ESTILISTAS SOLO PARA BLOQUEOS
+   CARGAR ESTILISTAS PARA BLOQUEOS CON VISUALIZACIÓN
 =================================================== */
 async function loadBlockStylists() {
     try {
@@ -354,6 +415,139 @@ async function loadBlockStylists() {
         generateBlockCards(staff);
     } catch (error) {
         console.error("Error cargando estilistas para bloqueo:", error);
+    }
+}
+
+/* ===================================================
+   GENERAR TARJETAS DE BLOQUEO CON VER BLOQUEOS
+=================================================== */
+function generateBlockCards(stylists) {
+    const container = document.getElementById("block-stylists-container");
+
+    if (!container) {
+        console.error("No existe el contenedor block-stylists-container");
+        return;
+    }
+
+    container.innerHTML = "";
+
+    stylists.forEach(est => {
+        const card = document.createElement("div");
+        card.classList.add("block-card");
+
+        card.innerHTML = `
+            <h3>${est.nombre}</h3>
+
+            <label>Día único:</label>
+            <input type="date" class="single-day">
+
+            <label>Rango:</label>
+            <div class="range-box">
+                <input type="date" class="range-start">
+                <input type="date" class="range-end">
+            </div>
+
+            <label>Motivo:</label>
+            <select class="reason">
+                <option value="Vacaciones">Vacaciones</option>
+                <option value="Día libre">Día libre</option>
+                <option value="Incapacidad">Incapacidad</option>
+                <option value="Evento personal">Evento personal</option>
+            </select>
+
+            <button class="btn-block" data-id="${est.id_estilista}">Bloquear</button>
+            <button class="btn-ver-bloqueos" data-id="${est.id_estilista}" style="margin-top: 10px; background: #555;">Ver bloqueos</button>
+            
+            <div class="bloqueos-list" style="margin-top: 15px; display: none;"></div>
+        `;
+
+        container.appendChild(card);
+    });
+
+    // Event listener para ver bloqueos
+    document.querySelectorAll(".btn-ver-bloqueos").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+            const estilistaId = e.target.dataset.id;
+            const card = e.target.closest(".block-card");
+            const bloqueosList = card.querySelector(".bloqueos-list");
+
+            if (bloqueosList.style.display === "none") {
+                await mostrarBloqueos(estilistaId, bloqueosList);
+                bloqueosList.style.display = "block";
+                e.target.textContent = "Ocultar bloqueos";
+            } else {
+                bloqueosList.style.display = "none";
+                e.target.textContent = "Ver bloqueos";
+            }
+        });
+    });
+}
+
+async function mostrarBloqueos(estilistaId, container) {
+    try {
+        const response = await fetch(`${window.API_URL}/bloqueos/${estilistaId}`);
+        const bloqueos = await response.json();
+
+        container.innerHTML = "";
+
+        if (bloqueos.length === 0) {
+            container.innerHTML = "<p style='color: #666;'>No hay bloqueos registrados</p>";
+            return;
+        }
+
+        bloqueos.forEach(bloqueo => {
+            const item = document.createElement("div");
+            item.style.padding = "10px";
+            item.style.background = "#f9f9f9";
+            item.style.borderRadius = "8px";
+            item.style.marginBottom = "8px";
+            item.style.display = "flex";
+            item.style.justifyContent = "space-between";
+            item.style.alignItems = "center";
+
+            item.innerHTML = `
+                <div>
+                    <strong>${bloqueo.fecha}</strong><br>
+                    <span style="color: #666; font-size: 14px;">${bloqueo.motivo}</span>
+                </div>
+                <button class="btn-eliminar-bloqueo" data-id="${bloqueo.id}" style="background: #e74a3b; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
+                    Eliminar
+                </button>
+            `;
+
+            container.appendChild(item);
+        });
+
+        // Event listeners para eliminar bloqueos
+        container.querySelectorAll(".btn-eliminar-bloqueo").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const bloqueoId = e.target.dataset.id;
+                if (confirm("¿Eliminar este bloqueo?")) {
+                    await eliminarBloqueo(bloqueoId, estilistaId, container);
+                }
+            });
+        });
+
+    } catch (error) {
+        console.error("Error cargando bloqueos:", error);
+        container.innerHTML = "<p style='color: red;'>Error cargando bloqueos</p>";
+    }
+}
+
+async function eliminarBloqueo(bloqueoId, estilistaId, container) {
+    try {
+        const response = await fetch(`${window.API_URL}/bloqueos/${bloqueoId}`, {
+            method: "DELETE"
+        });
+
+        if (response.ok) {
+            alert("✓ Bloqueo eliminado");
+            await mostrarBloqueos(estilistaId, container);
+        } else {
+            alert("Error al eliminar bloqueo");
+        }
+    } catch (error) {
+        console.error("Error eliminando bloqueo:", error);
     }
 }
 
@@ -423,51 +617,6 @@ document.addEventListener("click", async (e) => {
     boton.textContent = "Bloquear";
 });
 
-/* ===================================================
-   GENERAR TARJETAS DE BLOQUEO
-=================================================== */
-function generateBlockCards(stylists) {
-    const container = document.getElementById("block-stylists-container");
-
-    if (!container) {
-        console.error("No existe el contenedor block-stylists-container");
-        return;
-    }
-
-    container.innerHTML = "";
-
-    stylists.forEach(est => {
-        const card = document.createElement("div");
-        card.classList.add("block-card");
-
-        card.innerHTML = `
-            <h3>${est.nombre}</h3>
-
-            <label>Día único:</label>
-            <input type="date" class="single-day">
-
-            <label>Rango:</label>
-            <div class="range-box">
-                <input type="date" class="range-start">
-                <input type="date" class="range-end">
-            </div>
-
-            <label>Motivo:</label>
-            <select class="reason">
-                <option value="Vacaciones">Vacaciones</option>
-                <option value="Día libre">Día libre</option>
-                <option value="Incapacidad">Incapacidad</option>
-                <option value="Evento personal">Evento personal</option>
-            </select>
-
-
-            <button class="btn-block" data-id="${est.id_estilista}">Bloquear</button>
-        `;
-
-        container.appendChild(card);
-    });
-}
-
 loadTodayCount();
 
 async function loadTodayCount() {
@@ -508,4 +657,48 @@ async function loadConfirmedMonthCount() {
     }
 }
 
+async function loadSatisfaccion() {
+    try {
+        const res = await fetch(`${window.API_URL}/estadisticas/satisfaccion`);
+        const data = await res.json();
+        document.getElementById("stat-sat").textContent = data.satisfaccion + "%";
+    } catch (err) {
+        console.error("Error al cargar satisfacción:", err);
+    }
+}
 
+/* ==========================
+   CARGAR SERVICIOS PARA AÑADIR ESTILISTA
+========================== */
+async function cargarServiciosParaEstilista() {
+    try {
+        const response = await fetch(`${window.API_URL}/servicios`);
+        const servicios = await response.json();
+
+        const container = document.getElementById("servicios-estilista");
+        if (!container) return;
+
+        container.innerHTML = "";
+
+        servicios.forEach(servicio => {
+            const label = document.createElement("label");
+            label.style.display = "block";
+            label.style.marginBottom = "8px";
+            
+            label.innerHTML = `
+                <input type="checkbox" name="servicios" value="${servicio.id}">
+                ${servicio.nombre}
+            `;
+
+            container.appendChild(label);
+        });
+
+    } catch (error) {
+        console.error("Error cargando servicios:", error);
+    }
+}
+
+// Cargar servicios cuando se carga la página
+document.addEventListener("DOMContentLoaded", () => {
+    cargarServiciosParaEstilista();
+});
