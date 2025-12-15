@@ -1,5 +1,5 @@
 /* =========================================================
-   BEAUTYWEB - APP.JS COMPLETO CON VALIDACIONES MEJORADAS
+   BEAUTYWEB - APP.JS MEJORADO
 ========================================================= */
 
 localStorage.removeItem("currentUser");
@@ -43,7 +43,7 @@ function validarTelefono(telefono) {
 }
 
 function validarNombre(nombre) {
-    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,20}$/.test(nombre);
+    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,25}$/.test(nombre);
 }
 
 function validarContrasena(contrasena) {
@@ -225,10 +225,17 @@ function showView(id) {
 }
 
 /* ============================================
-   CARGAR SERVICIOS Y ESTILISTAS
+   CARGAR SERVICIOS Y ESTILISTAS CON FLUJO SECUENCIAL
 ============================================ */
 const servicioSelect = document.getElementById("servicio1");
 const estilistaSelect = document.getElementById("estilista");
+const fechaInput = document.getElementById("book-date");
+const horaSelect = document.getElementById("book-time");
+
+// Deshabilitar campos inicialmente
+if (estilistaSelect) estilistaSelect.disabled = true;
+if (fechaInput) fechaInput.disabled = true;
+if (horaSelect) horaSelect.disabled = true;
 
 async function cargarServicios() {
     const res = await fetch(`${window.API_URL}/servicios`);
@@ -245,6 +252,11 @@ servicioSelect.addEventListener("change", async () => {
     const servicioElegido = servicioSelect.value.trim();
 
     estilistaSelect.innerHTML = "<option value=''>Selecciona...</option>";
+    estilistaSelect.disabled = true;
+    fechaInput.disabled = true;
+    fechaInput.value = "";
+    horaSelect.disabled = true;
+    horaSelect.innerHTML = '<option value="">Selecciona un horario</option>';
 
     if (!servicioElegido) return;
 
@@ -260,8 +272,26 @@ servicioSelect.addEventListener("change", async () => {
         estilistas.forEach(e => {
             estilistaSelect.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
         });
+        
+        estilistaSelect.disabled = false;
     } catch (error) {
         console.error("Error cargando estilistas:", error);
+    }
+});
+
+// Al seleccionar estilista, habilitar fecha
+estilistaSelect.addEventListener("change", () => {
+    const estilistaId = estilistaSelect.value;
+    
+    if (estilistaId) {
+        fechaInput.disabled = false;
+        fechaInput.value = "";
+        horaSelect.disabled = true;
+        horaSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+    } else {
+        fechaInput.disabled = true;
+        fechaInput.value = "";
+        horaSelect.disabled = true;
     }
 });
 
@@ -351,7 +381,7 @@ function renderAppointments(telefono, appointments) {
 }
 
 /* ============================================
-   BLOQUEAR FECHAS Y CARGAR HORARIOS
+   BLOQUEAR FECHAS Y CARGAR HORARIOS CON DÍAS BLOQUEADOS
 ============================================ */
 function establecerFechaMinima() {
     const inputFecha = document.getElementById("book-date");
@@ -378,11 +408,10 @@ async function cargarHorariosDisponibles() {
     }
 
     try {
-        // Obtener horarios bloqueados
+        // Verificar si el día está bloqueado
         const resBloqueados = await fetch(`${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`);
         const bloqueados = await resBloqueados.json();
 
-        // Verificar si el día está completamente bloqueado
         if (bloqueados.length > 0) {
             selectHora.innerHTML = '<option value="">Este día no está disponible</option>';
             selectHora.disabled = true;
@@ -419,17 +448,38 @@ async function cargarHorariosDisponibles() {
     }
 }
 
-function convertirA12Horas(hora24) {
-    const [horas, minutos] = hora24.split(':');
-    let h = parseInt(horas);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12 || 12;
-    return `${String(h).padStart(2, '0')}:${minutos} ${ampm}`;
+// Deshabilitar fechas bloqueadas en el calendario
+async function aplicarBloqueosFechas() {
+    const estilista = document.getElementById("estilista").value;
+    const fechaInput = document.getElementById("book-date");
+    
+    if (!estilista) return;
+
+    try {
+        // Obtener todas las fechas bloqueadas del estilista
+        const res = await fetch(`${window.API_URL}/bloqueos/${estilista}`);
+        const bloqueos = await res.json();
+        
+        const fechasBloqueadas = bloqueos.map(b => b.fecha);
+        
+        // Crear un listener para validar la fecha seleccionada
+        fechaInput.addEventListener("input", function() {
+            const fechaSeleccionada = this.value;
+            
+            if (fechasBloqueadas.includes(fechaSeleccionada)) {
+                alert("⚠️ Esta fecha no está disponible para este estilista");
+                this.value = "";
+                document.getElementById("book-time").innerHTML = '<option value="">Selecciona un horario</option>';
+                document.getElementById("book-time").disabled = true;
+            }
+        });
+        
+    } catch (error) {
+        console.error("Error cargando bloqueos:", error);
+    }
 }
 
-/* ============================================
-   EVENT LISTENERS
-============================================ */
+// Actualizar el listener del estilista para aplicar bloqueos
 document.addEventListener("DOMContentLoaded", () => {
     establecerFechaMinima();
     
@@ -437,13 +487,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const fechaInput = document.getElementById("book-date");
     
     if (estilistaSelectElem) {
-        estilistaSelectElem.addEventListener("change", cargarHorariosDisponibles);
+        estilistaSelectElem.addEventListener("change", () => {
+            if (estilistaSelectElem.value) {
+                aplicarBloqueosFechas();
+            }
+            cargarHorariosDisponibles();
+        });
     }
     
     if (fechaInput) {
         fechaInput.addEventListener("change", cargarHorariosDisponibles);
     }
 });
+
+function convertirA12Horas(hora24) {
+    const [horas, minutos] = hora24.split(':');
+    let h = parseInt(horas);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${String(h).padStart(2, '0')}:${minutos} ${ampm}`;
+}
 
 /* ============================================
    ADMIN
@@ -603,7 +666,7 @@ document.getElementById("register-email").addEventListener("input", function() {
 document.getElementById("register-name").addEventListener("input", function () {
     this.value = this.value
         .replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
-        .slice(0, 20);
+        .slice(0, 25);
 });
 
 const vistaBook = document.getElementById("book");
