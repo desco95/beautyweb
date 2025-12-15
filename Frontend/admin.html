@@ -82,50 +82,42 @@
         </div>
     </div>
 
-    <!-- ======================================================
-     SECCIÓN COMPLETA DE GESTIÓN DE HORARIOS
-    ====================================================== -->
+    <!-- ======================================
+                GESTIÓN DE HORARIOS
+        ======================================= -->
+    <div id="horarios" class="view">
+        <h1>Gestión de horarios</h1>
 
-<div id="horarios" class="view">
-    <h1>Gestión de horarios</h1>
+        <!-- Acciones -->
+        <div class="horarios-actions">
 
-    <!-- Acciones -->
-    <div class="horarios-actions">
-
-        <!-- Añadir estilista -->
-        <div class="mini-card">
-            <h3>Añadir estilista</h3>
-            <input type="text" id="new-stylist-name" placeholder="Nombre del estilista" maxlength="50">
-            
-            <div style="margin: 15px 0;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #ff4fa1;">Servicios que ofrece:</label>
-                <div id="servicios-estilista" style="max-height: 180px; overflow-y: auto; border: 1px solid #e0e0e0; padding: 12px; border-radius: 8px; background: #fafafa;">
-                    <!-- Los checkboxes se cargarán dinámicamente desde JS -->
-                    <p style="color: #999; font-size: 14px;">Cargando servicios...</p>
-                </div>
+            <!-- Añadir estilista -->
+            <div class="mini-card">
+                <h3>Añadir estilista</h3>
+                <input type="text" id="new-stylist-name" placeholder="Nombre del estilista">
+                <button onclick="addStylist()">Agregar</button>
             </div>
-            
-            <button onclick="addStylist()" style="width: 100%; margin-top: 10px;">Agregar</button>
+
+            <!-- Eliminar estilista -->
+            <div class="mini-card">
+                <h3>Eliminar estilista</h3>
+                <select id="delete-estilista-select"></select>
+                <button onclick="deleteStylist()">Eliminar</button>
+            </div>
+
         </div>
 
-        <!-- Eliminar estilista -->
-        <div class="mini-card">
-            <h3>Eliminar estilista</h3>
-            <select id="delete-estilista-select"></select>
-            <button onclick="deleteStylist()" style="width: 100%; margin-top: 10px;">Eliminar</button>
+        <!-- Tarjetas de horarios -->
+        <div class="block-card">
+            <h2 class="section-title">Bloqueo de Horarios</h2>
+
+            <!-- ESTE es el contenedor que JS usa para insertar una card por estilista -->
+            <div id="block-stylists-container" class="block-cards-container"></div>
         </div>
 
+
+
     </div>
-
-    <!-- Tarjetas de bloqueo por estilista -->
-    <div class="block-card" style="margin-top: 30px;">
-        <h2 class="section-title" style="color: #ff4fa1; margin-bottom: 20px;">Bloqueo de Horarios</h2>
-
-        <!-- Contenedor de cards por estilista -->
-        <div id="block-stylists-container" class="block-cards-container"></div>
-    </div>
-
-</div>
 
     <!-- ======================================
                 PERSONAL DISPONIBLE
