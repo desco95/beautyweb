@@ -342,11 +342,14 @@ async function aplicarBloqueosFechas() {
    🔥 CARGAR HORARIOS DISPONIBLES (CORREGIDO)
 ============================================ */
 async function cargarHorariosDisponibles() {
-    const estilista = estilistaSelect.value;
+    const estilista = document.getElementById("estilista").value;
     const fecha = document.getElementById("book-date").value;
-    const selectHora = horaSelect;
+    const selectHora = document.getElementById("book-time");
+
+    console.log("Cargando horarios para:", { estilista, fecha });
 
     if (!estilista || !fecha) {
+        console.log("Falta estilista o fecha");
         return;
     }
 
@@ -354,6 +357,8 @@ async function cargarHorariosDisponibles() {
         // Verificar si el día está bloqueado
         const resBloqueados = await fetch(`${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`);
         const bloqueados = await resBloqueados.json();
+
+        console.log("Bloqueados:", bloqueados);
 
         if (bloqueados.length > 0) {
             selectHora.innerHTML = '<option value="">Este día no está disponible</option>';
@@ -364,6 +369,8 @@ async function cargarHorariosDisponibles() {
         // Obtener horarios ocupados
         const resOcupados = await fetch(`${window.API_URL}/horarios_ocupados/${estilista}/${fecha}`);
         const ocupados = await resOcupados.json();
+
+        console.log("Ocupados:", ocupados);
 
         const todosHorarios = [
             "09:00", "10:00", "11:00", "12:00", 
@@ -386,8 +393,11 @@ async function cargarHorariosDisponibles() {
             selectHora.appendChild(option);
         });
 
+        console.log("Horarios cargados exitosamente");
+
     } catch (error) {
         console.error("Error cargando horarios:", error);
+        alert("Error al cargar los horarios disponibles");
     }
 }
 
@@ -684,6 +694,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (bookPhoneInput) {
         bookPhoneInput.addEventListener("input", function() {
             this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+    }
+
+    // 🔥 LISTENER PARA CARGAR HORARIOS CUANDO CAMBIA LA FECHA
+    const fechaBookInput = document.getElementById("book-date");
+    if (fechaBookInput) {
+        fechaBookInput.addEventListener("change", () => {
+            console.log("Fecha cambiada, cargando horarios...");
+            cargarHorariosDisponibles();
         });
     }
 });
