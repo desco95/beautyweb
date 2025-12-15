@@ -432,16 +432,34 @@ function convertirA12Horas(hora24) {
 ============================================ */
 document.addEventListener("DOMContentLoaded", () => {
     establecerFechaMinima();
-    
+
+    // 🔹 Eventos para cargar horarios
     const estilistaSelectElem = document.getElementById("estilista");
     const fechaInput = document.getElementById("book-date");
-    
+
     if (estilistaSelectElem) {
         estilistaSelectElem.addEventListener("change", cargarHorariosDisponibles);
     }
-    
+
     if (fechaInput) {
         fechaInput.addEventListener("change", cargarHorariosDisponibles);
+    }
+
+    // 🔹 VALIDACIONES EN TIEMPO REAL (AGENDAR)
+    const bookName = document.getElementById("book-name");
+    if (bookName) {
+        bookName.addEventListener("input", function () {
+            this.value = this.value
+                .replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
+                .slice(0, 25);
+        });
+    }
+
+    const bookPhone = document.getElementById("book-phone");
+    if (bookPhone) {
+        bookPhone.addEventListener("input", function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
     }
 });
 
