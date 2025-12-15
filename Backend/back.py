@@ -647,12 +647,19 @@ def obtener_horarios_ocupados(id_estilista, fecha):
         AND estado IN ('Pendiente', 'Confirmada')
     """, (id_estilista, fecha))
 
-    ocupados = [str(r[0])[:-3] for r in cur.fetchall()]
+    # 🔥 CAMBIO AQUÍ: Convertir correctamente el formato
+    ocupados = []
+    for r in cur.fetchall():
+        hora_str = str(r[0])
+        # Extraer HH:MM (sin segundos)
+        if len(hora_str) >= 5:
+            ocupados.append(hora_str[:5])  # "09:00:00" -> "09:00"
+    
     cur.close()
     conn.close()
 
     return jsonify(ocupados)
-
+    
 # ================================
 # CONTAR CITAS CONFIRMADAS DEL MES ACTUAL
 # ================================
