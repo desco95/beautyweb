@@ -5,6 +5,7 @@ import psycopg2.extras
 import bcrypt
 from datetime import date, datetime
 import os
+import re
 
 app = Flask(__name__)
 
@@ -32,30 +33,37 @@ def get_db():
             password="1234"
         )
 
+# Validaciones
+def validar_telefono(telefono):
+    """Valida que el teléfono tenga exactamente 10 dígitos"""
+    return bool(re.match(r'^\d{10}$', telefono))
+
+def validar_nombre(nombre):
+    """Valida que el nombre solo contenga letras y espacios, máx 20 caracteres"""
+    return bool(re.match(r'^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,20}$', nombre))
+
+def validar_contrasena(contrasena):
+    """Valida que la contraseña tenga al menos 6 caracteres"""
+    return len(contrasena) >= 6
+
 # ==================================================
-#   REGISTRO DE USUARIO CON VALIDACIONES
+#   REGISTRO DE USUARIO
 # ==================================================
 @app.route("/registro", methods=["POST"])
 def registro():
     data = request.json
     nombre = data.get("nombre", "").strip()
     telefono = data.get("telefono", "").strip()
-    contrasena = data.get("contrasena", "").strip()
+    contrasena = data.get("contrasena", "")
 
     # Validaciones
-    if not nombre or not telefono or not contrasena:
-        return jsonify({"error": "Todos los campos son obligatorios"}), 400
+    if not validar_nombre(nombre):
+        return jsonify({"error": "El nombre solo debe contener letras y espacios (máx 20 caracteres)"}), 400
     
-    # Validar nombre (solo letras y espacios, max 20 caracteres)
-    if not nombre.replace(" ", "").isalpha() or len(nombre) > 20:
-        return jsonify({"error": "Nombre inválido (solo letras, máx 20 caracteres)"}), 400
+    if not validar_telefono(telefono):
+        return jsonify({"error": "El teléfono debe tener exactamente 10 dígitos"}), 400
     
-    # Validar teléfono (exactamente 10 dígitos numéricos)
-    if not telefono.isdigit() or len(telefono) != 10:
-        return jsonify({"error": "Teléfono inválido (debe ser 10 dígitos)"}), 400
-    
-    # Validar contraseña (mínimo 6 caracteres)
-    if len(contrasena) < 6:
+    if not validar_contrasena(contrasena):
         return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
 
     try:
@@ -64,7 +72,7 @@ def registro():
 
         cur.execute("SELECT * FROM usuarios WHERE telefono = %s", (telefono,))
         if cur.fetchone():
-            return jsonify({"error": "El número ya está registrado"}), 400
+            return jsonify({"error": "Este número ya está registrado"}), 400
 
         hashed = bcrypt.hashpw(contrasena.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         
@@ -84,20 +92,16 @@ def registro():
 
 
 # ==================================================
-#   LOGIN CON VALIDACIONES
+#   LOGIN DE USUARIO
 # ==================================================
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
     telefono = data.get("telefono", "").strip()
-    contrasena = data.get("contrasena", "").strip()
+    contrasena = data.get("contrasena", "")
 
-    # Validaciones
-    if not telefono or not contrasena:
-        return jsonify({"error": "Todos los campos son obligatorios"}), 400
-    
-    if not telefono.isdigit() or len(telefono) != 10:
-        return jsonify({"error": "Teléfono inválido (debe ser 10 dígitos)"}), 400
+    if not validar_telefono(telefono):
+        return jsonify({"error": "El teléfono debe tener exactamente 10 dígitos"}), 400
 
     conn = get_db()
     cursor = conn.cursor()
@@ -129,7 +133,7 @@ def login():
     })
 
 # ================================
-#   OBTENER CITAS POR TELÉFONO
+#   OBTENER CITAS POR TELÉFONO (CON DATOS DEL CLIENTE)
 # ================================
 @app.route('/citas_usuario/<telefono>', methods=['GET'])
 def citas_usuario(telefono):
@@ -137,7 +141,8 @@ def citas_usuario(telefono):
     cur = conn.cursor()
 
     query = """
-        SELECT c.id, c.servicio, e.nombre as estilista, c.fecha, c.hora, c.estado, c.notas
+        SELECT c.id, c.servicio, e.nombre as estilista, c.fecha, c.hora, 
+               c.estado, c.notas, u.nombre as cliente, u.telefono as cliente_telefono
         FROM citas c
         JOIN usuarios u ON c.usuario_id = u.id
         LEFT JOIN estilistas e ON c.estilista = e.id
@@ -156,7 +161,9 @@ def citas_usuario(telefono):
             "estilista": r[2] if r[2] else "Sin asignar",
             "fecha": r[3].strftime("%Y-%m-%d"),
             "hora": r[4].strftime("%H:%M"),
-            "estado": r[5]
+            "estado": r[5],
+            "cliente": r[7],
+            "telefono": r[8]
         }
         
         if r[5] == "Cancelada" and r[6]:
@@ -171,16 +178,47 @@ def citas_usuario(telefono):
 
 
 # ================================
-#   OBTENER ESTILISTAS
+#   OBTENER ESTILISTAS CON SERVICIOS
 # ================================
 @app.route("/estilistas", methods=["GET"])
 def obtener_estilistas():
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    cur.execute("SELECT * FROM estilistas ORDER BY nombre")
+    cur.execute("""
+        SELECT e.id, e.nombre, 
+               COALESCE(array_agg(es.servicio_id) FILTER (WHERE es.servicio_id IS NOT NULL), ARRAY[]::integer[]) as servicios
+        FROM estilistas e
+        LEFT JOIN estilista_servicios es ON e.id = es.estilista_id
+        GROUP BY e.id, e.nombre
+        ORDER BY e.nombre
+    """)
     data = cur.fetchall()
 
+    cur.close()
+    conn.close()
+
+    return jsonify([dict(row) for row in data])
+
+
+# ================================
+#   OBTENER ESTILISTAS POR SERVICIO
+# ================================
+@app.route("/estilistas/por-servicio/<servicio_nombre>", methods=["GET"])
+def obtener_estilistas_por_servicio(servicio_nombre):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""
+        SELECT DISTINCT e.id, e.nombre
+        FROM estilistas e
+        JOIN estilista_servicios es ON e.id = es.estilista_id
+        JOIN servicios s ON es.servicio_id = s.id
+        WHERE s.nombre = %s
+        ORDER BY e.nombre
+    """, (servicio_nombre,))
+    
+    data = cur.fetchall()
     cur.close()
     conn.close()
 
@@ -227,6 +265,47 @@ def obtener_bloqueados(id_estilista, fecha):
 
 
 # ================================
+#   LISTAR BLOQUEOS DE UN ESTILISTA
+# ================================
+@app.route("/bloqueos/<int:id_estilista>", methods=["GET"])
+def listar_bloqueos(id_estilista):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""
+        SELECT id, fecha, motivo
+        FROM horarios_bloqueados
+        WHERE id_estilista = %s
+        ORDER BY fecha DESC
+    """, (id_estilista,))
+
+    bloqueos = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return jsonify([dict(row) for row in bloqueos])
+
+
+# ================================
+#   ELIMINAR BLOQUEO
+# ================================
+@app.route("/bloqueos/<int:bloqueo_id>", methods=["DELETE"])
+def eliminar_bloqueo(bloqueo_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("DELETE FROM horarios_bloqueados WHERE id = %s", (bloqueo_id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"mensaje": "Bloqueo eliminado correctamente"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ================================
 #   CREAR CITA CON VALIDACIONES
 # ================================
 @app.route("/agendar", methods=["POST"])
@@ -248,6 +327,7 @@ def agendar():
         if fecha_cita < date.today():
             return jsonify({"error": "No puedes agendar citas en fechas pasadas"}), 400
 
+        # Verificar bloqueos
         cur.execute("""
             SELECT id FROM horarios_bloqueados
             WHERE id_estilista = %s AND fecha = %s
@@ -256,6 +336,7 @@ def agendar():
         if cur.fetchone():
             return jsonify({"error": "El estilista no está disponible en esta fecha"}), 400
 
+        # Verificar disponibilidad
         cur.execute("""
             SELECT id FROM citas
             WHERE estilista = %s 
@@ -265,13 +346,7 @@ def agendar():
         """, (estilista_id, fecha, hora))
         
         if cur.fetchone():
-            return jsonify({"error": "Este horario ya está ocupado para este estilista"}), 400
-
-        cur.execute("SELECT nombre FROM estilistas WHERE id = %s", (estilista_id,))
-        estilista_nombre = cur.fetchone()
-        
-        if not estilista_nombre:
-            return jsonify({"error": "Estilista no encontrado"}), 400
+            return jsonify({"error": "Este horario ya está ocupado"}), 400
 
         cur.execute("""
             INSERT INTO citas (usuario_id, servicio, estilista, fecha, hora, notas)
@@ -280,7 +355,6 @@ def agendar():
         """, (usuario_id, servicio, estilista_id, fecha, hora, notas))
 
         new_id = cur.fetchone()[0]
-
         conn.commit()
         return jsonify({"mensaje": "Cita agendada", "id": new_id})
 
@@ -299,7 +373,6 @@ def agendar():
 def bloquear_horario():
     try:
         data = request.json
-
         fecha = data.get("fecha")
         estilista = int(data.get("id_estilista"))
         motivo = data.get("motivo")
@@ -318,62 +391,6 @@ def bloquear_horario():
 
         return jsonify({"mensaje": "Horario bloqueado"}), 201
     
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# ================================
-#   VER BLOQUEOS DE ESTILISTA
-# ================================
-@app.route("/bloqueos/<int:id_estilista>", methods=["GET"])
-def ver_bloqueos(id_estilista):
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-
-        cur.execute("""
-            SELECT id, fecha, motivo
-            FROM horarios_bloqueados
-            WHERE id_estilista = %s
-            ORDER BY fecha DESC
-        """, (id_estilista,))
-
-        rows = cur.fetchall()
-        bloqueos = []
-        
-        for row in rows:
-            bloqueos.append({
-                "id": row[0],
-                "fecha": row[1].strftime("%Y-%m-%d"),
-                "motivo": row[2]
-            })
-
-        cur.close()
-        conn.close()
-
-        return jsonify(bloqueos)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# ================================
-#   ELIMINAR BLOQUEO
-# ================================
-@app.route("/bloqueos/<int:id_bloqueo>", methods=["DELETE"])
-def eliminar_bloqueo(id_bloqueo):
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-
-        cur.execute("DELETE FROM horarios_bloqueados WHERE id = %s", (id_bloqueo,))
-        conn.commit()
-
-        cur.close()
-        conn.close()
-
-        return jsonify({"mensaje": "Bloqueo eliminado correctamente"})
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -427,13 +444,14 @@ def obtener_staff():
         return jsonify(staff)
 
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
+
     
 @app.route("/admin/stylists/add", methods=["POST"])
 def add_stylist():
     data = request.json
     nombre = data.get("nombre")
-    servicios = data.get("servicios", [])  # Lista de IDs de servicios
+    servicios = data.get("servicios", [])  # Array de IDs de servicios
 
     if not nombre:
         return jsonify({"error": "Nombre requerido"}), 400
@@ -442,23 +460,21 @@ def add_stylist():
     cur = conn.cursor()
 
     try:
-        # Insertar estilista
         cur.execute("INSERT INTO estilistas (nombre) VALUES (%s) RETURNING id", (nombre,))
         new_id = cur.fetchone()[0]
-        
-        # Asociar servicios
+
+        # Insertar servicios
         for servicio_id in servicios:
             cur.execute("""
                 INSERT INTO estilista_servicios (estilista_id, servicio_id)
                 VALUES (%s, %s)
             """, (new_id, servicio_id))
-        
+
         conn.commit()
         cur.close()
         conn.close()
 
         return jsonify({"message": "Estilista agregado", "id": new_id})
-    
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
@@ -474,6 +490,8 @@ def delete_stylist():
     conn = get_db()
     cur = conn.cursor()
 
+    # Primero eliminar relaciones
+    cur.execute("DELETE FROM estilista_servicios WHERE estilista_id = %s", (estilista_id,))
     cur.execute("DELETE FROM estilistas WHERE id = %s", (estilista_id,))
     conn.commit()
 
@@ -484,7 +502,7 @@ def delete_stylist():
 
 
 # ================================
-#   OBTENER CITAS PENDIENTES CON INFORMACIÓN COMPLETA
+#   OBTENER CITAS PENDIENTES Y CONFIRMADAS
 # ================================
 @app.route('/citas/pendientes', methods=['GET'])
 def citas_pendientes():
@@ -493,7 +511,7 @@ def citas_pendientes():
 
     cursor.execute("""
         SELECT c.id, c.servicio, e.nombre as estilista, c.fecha, c.hora, c.estado,
-               u.nombre AS cliente, u.telefono
+               u.nombre AS cliente, u.telefono AS telefono
         FROM citas c
         JOIN usuarios u ON c.usuario_id = u.id
         LEFT JOIN estilistas e ON c.estilista = e.id
@@ -543,7 +561,7 @@ def confirmar_cita(id):
         return jsonify({"mensaje": "Cita confirmada"})
 
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 # ================================
 #   RECHAZAR CITA
@@ -571,13 +589,12 @@ def rechazar_cita(id):
         return jsonify({"mensaje": "Cita cancelada"})
 
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
     
 @app.route("/citas/hoy/count", methods=["GET"])
 def total_citas_hoy():
     try:
         hoy = date.today()
-
         conn = get_db()
         cur = conn.cursor()
 
@@ -588,14 +605,13 @@ def total_citas_hoy():
         """, (hoy,))
 
         total = cur.fetchone()[0]
-
         cur.close()
         conn.close()
 
         return jsonify({"total": total})
 
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
     
 @app.route("/citas/pendientes/count", methods=["GET"])
 def count_citas_pendientes():
@@ -616,7 +632,7 @@ def count_citas_pendientes():
         return jsonify({"error": "Error interno en el servidor"}), 500
 
 # ================================
-#   OBTENER HORARIOS OCUPADOS
+#   OBTENER HORARIOS OCUPADOS POR ESTILISTA Y FECHA
 # ================================
 @app.route("/horarios_ocupados/<int:id_estilista>/<fecha>", methods=["GET"])
 def obtener_horarios_ocupados(id_estilista, fecha):
@@ -632,14 +648,13 @@ def obtener_horarios_ocupados(id_estilista, fecha):
     """, (id_estilista, fecha))
 
     ocupados = [str(r[0])[:-3] for r in cur.fetchall()]
-
     cur.close()
     conn.close()
 
     return jsonify(ocupados)
 
 # ================================
-#   CONTAR CITAS CONFIRMADAS DEL MES
+# CONTAR CITAS CONFIRMADAS DEL MES ACTUAL
 # ================================
 @app.route("/citas/confirmadas/mes/count", methods=["GET"])
 def count_confirmed_month():
@@ -673,36 +688,39 @@ def count_confirmed_month():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 # ================================
-#   OBTENER ESTILISTAS POR SERVICIO
+# ESTADÍSTICA DE SATISFACCIÓN
 # ================================
-@app.route("/estilistas/servicio/<servicio_nombre>", methods=["GET"])
-def estilistas_por_servicio(servicio_nombre):
+@app.route("/estadisticas/satisfaccion", methods=["GET"])
+def estadistica_satisfaccion():
     try:
         conn = get_db()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur = conn.cursor()
 
+        # Calcular satisfacción basada en citas confirmadas vs canceladas
         cur.execute("""
-            SELECT DISTINCT e.id, e.nombre
-            FROM estilistas e
-            JOIN estilista_servicios es ON e.id = es.estilista_id
-            JOIN servicios s ON es.servicio_id = s.id
-            WHERE s.nombre = %s
-            ORDER BY e.nombre
-        """, (servicio_nombre,))
+            SELECT 
+                COUNT(*) FILTER (WHERE estado = 'Confirmada') as confirmadas,
+                COUNT(*) FILTER (WHERE estado = 'Cancelada') as canceladas,
+                COUNT(*) as total
+            FROM citas
+            WHERE fecha >= CURRENT_DATE - INTERVAL '30 days'
+        """)
 
-        data = cur.fetchall()
+        resultado = cur.fetchone()
         cur.close()
         conn.close()
 
-        return jsonify([dict(row) for row in data])
+        if resultado[2] > 0:
+            satisfaccion = round((resultado[0] / resultado[2]) * 100, 1)
+        else:
+            satisfaccion = 100.0
+
+        return jsonify({"satisfaccion": satisfaccion})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-# Ruta de salud para Render
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"}), 200
