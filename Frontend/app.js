@@ -1,5 +1,5 @@
 /* =========================================================
-   BEAUTYWEB - APP.JS SIMPLIFICADO Y FUNCIONAL
+   BEAUTYWEB - APP.JS COMPLETO CON VALIDACIONES MEJORADAS
 ========================================================= */
 
 localStorage.removeItem("currentUser");
@@ -43,7 +43,7 @@ function validarTelefono(telefono) {
 }
 
 function validarNombre(nombre) {
-    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,25}$/.test(nombre);
+    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,20}$/.test(nombre);
 }
 
 function validarContrasena(contrasena) {
@@ -225,131 +225,48 @@ function showView(id) {
 }
 
 /* ============================================
-   🔥 CARGAR SERVICIOS Y ESTILISTAS (SIMPLIFICADO)
+   CARGAR SERVICIOS Y ESTILISTAS
 ============================================ */
-async function cargarServicios() {
-    try {
-        const res = await fetch(`${window.API_URL}/servicios`);
-        const servicios = await res.json();
+const servicioSelect = document.getElementById("servicio1");
+const estilistaSelect = document.getElementById("estilista");
 
-        const servicioSelect = document.getElementById("servicio1");
-        servicioSelect.innerHTML = "<option value=''>Selecciona un servicio...</option>";
-        servicios.forEach(s => {
-            servicioSelect.innerHTML += `<option value="${s.nombre}">${s.nombre}</option>`;
-        });
-    } catch (error) {
-        console.error("Error cargando servicios:", error);
-    }
+async function cargarServicios() {
+    const res = await fetch(`${window.API_URL}/servicios`);
+    const servicios = await res.json();
+
+    servicioSelect.innerHTML = "<option value=''>Selecciona un servicio...</option>";
+    servicios.forEach(s => {
+        servicioSelect.innerHTML += `<option value="${s.nombre}">${s.nombre}</option>`;
+    });
 }
 
-async function cargarEstilistas() {
+// Cargar estilistas según servicio seleccionado
+servicioSelect.addEventListener("change", async () => {
+    const servicioElegido = servicioSelect.value.trim();
+
+    estilistaSelect.innerHTML = "<option value=''>Selecciona...</option>";
+
+    if (!servicioElegido) return;
+
     try {
-        const res = await fetch(`${window.API_URL}/admin/staff`);
+        const res = await fetch(`${window.API_URL}/estilistas/por-servicio/${encodeURIComponent(servicioElegido)}`);
         const estilistas = await res.json();
 
-        const estilistaSelect = document.getElementById("estilista");
-        estilistaSelect.innerHTML = "<option value=''>Selecciona un estilista...</option>";
+        if (estilistas.length === 0) {
+            estilistaSelect.innerHTML = "<option value=''>No hay estilistas disponibles</option>";
+            return;
+        }
+
         estilistas.forEach(e => {
-            estilistaSelect.innerHTML += `<option value="${e.id_estilista}">${e.nombre}</option>`;
+            estilistaSelect.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
         });
     } catch (error) {
         console.error("Error cargando estilistas:", error);
     }
-}
+});
 
 /* ============================================
-   🔥 CARGAR HORARIOS CUANDO CAMBIEN ESTILISTA O FECHA
-============================================ */
-async function cargarHorariosDisponibles() {
-    const estilistaSelect = document.getElementById("estilista");
-    const fechaInput = document.getElementById("book-date");
-    const horaSelect = document.getElementById("book-time");
-
-    const estilista = estilistaSelect.value;
-    const fecha = fechaInput.value;
-
-    console.log("🔍 Cargando horarios para:", { estilista, fecha });
-
-    // Resetear el select
-    horaSelect.innerHTML = '<option value="">Selecciona un horario</option>';
-    
-    if (!estilista || !fecha) {
-        horaSelect.innerHTML = '<option value="">Primero selecciona estilista y fecha</option>';
-        return;
-    }
-
-    try {
-        // Verificar si el día está bloqueado
-        const resBloqueados = await fetch(`${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`);
-        const bloqueados = await resBloqueados.json();
-
-        console.log("🚫 Días bloqueados:", bloqueados);
-
-        if (Array.isArray(bloqueados) && bloqueados.length > 0) {
-            horaSelect.innerHTML = '<option value="">Este día no está disponible</option>';
-            alert("⚠️ Este día no está disponible para este estilista");
-            return;
-        }
-
-        // Obtener horarios ocupados
-        const resOcupados = await fetch(`${window.API_URL}/horarios_ocupados/${estilista}/${fecha}`);
-        const ocupados = await resOcupados.json();
-
-        console.log("📋 Horarios ocupados:", ocupados);
-
-        const todosHorarios = [
-            "09:00", "10:00", "11:00", "12:00", 
-            "13:00", "14:00", "15:00", "16:00", 
-            "17:00", "18:00"
-        ];
-
-        let disponibles = 0;
-
-        todosHorarios.forEach(hora24 => {
-            const hora12 = convertirA12Horas(hora24);
-            const estaOcupado = ocupados.some(h => h.startsWith(hora24));
-            
-            const option = document.createElement("option");
-            option.value = hora24; // Valor en 24h para el backend
-            option.textContent = hora12 + (estaOcupado ? " (Ocupado)" : ""); // Texto en 12h
-            option.disabled = estaOcupado;
-            
-            if (!estaOcupado) disponibles++;
-            
-            horaSelect.appendChild(option);
-        });
-
-        console.log(`✅ ${disponibles} horarios disponibles de ${todosHorarios.length}`);
-
-        if (disponibles === 0) {
-            horaSelect.innerHTML = '<option value="">No hay horarios disponibles este día</option>';
-        }
-
-    } catch (error) {
-        console.error("❌ Error cargando horarios:", error);
-        horaSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
-        alert("Error al cargar horarios disponibles. Intenta de nuevo.");
-    }
-}
-
-function convertirA12Horas(hora24) {
-    const [horas, minutos] = hora24.split(':');
-    let h = parseInt(horas);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12 || 12;
-    return `${String(h).padStart(2, '0')}:${minutos} ${ampm}`;
-}
-
-function convertirA12Horas(hora24) {
-    const [horas, minutos] = hora24.split(':');
-    let h = parseInt(horas);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12 || 12;
-    return `${String(h).padStart(2, '0')}:${minutos} ${ampm}`;
-}
-
-/* ============================================
-   AGENDAR CITA
+   AGENDAR CITA CON VALIDACIONES
 ============================================ */
 async function bookAppointment(event) {
     event.preventDefault();
@@ -359,78 +276,44 @@ async function bookAppointment(event) {
         return;
     }
 
-    const nombre = document.getElementById("book-name").value.trim();
-    const telefono = document.getElementById("book-phone").value.trim();
-    const servicio = document.getElementById("servicio1").value;
-    const estilista = document.getElementById("estilista").value;
     const fecha = document.getElementById("book-date").value;
     const hora = document.getElementById("book-time").value;
+    const estilista = document.getElementById("estilista").value;
 
-    // Validaciones
-    if (!servicio) {
-        alert("❌ Selecciona un servicio");
-        return;
-    }
+    const fechaSeleccionada = new Date(fecha);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
 
-    if (!estilista) {
-        alert("❌ Selecciona un estilista");
-        return;
-    }
-
-    if (!fecha) {
-        alert("❌ Selecciona una fecha");
-        return;
-    }
-
-    if (!hora) {
-        alert("❌ Selecciona un horario");
-        return;
-    }
-
-    if (!validarNombre(nombre)) {
-        alert("❌ El nombre solo debe contener letras y espacios");
-        return;
-    }
-
-    if (!validarTelefono(telefono)) {
-        alert("❌ El teléfono debe tener exactamente 10 dígitos");
+    if (fechaSeleccionada < hoy) {
+        alert("❌ No puedes agendar citas en fechas pasadas");
         return;
     }
 
     const cita = {
         usuario_id: currentUser.id,
-        servicio: servicio,
-        estilista: parseInt(estilista),
+        servicio: document.getElementById("servicio1").value,
+        estilista: estilista,
         fecha: fecha,
         hora: hora,
-        notas: document.getElementById("book-notes").value
+        notas: document.getElementById("book-notes").value,
     };
 
-    console.log("🚀 Enviando cita:", cita);
+    const res = await fetch(`${window.API_URL}/agendar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cita)
+    });
 
-    try {
-        const res = await fetch(`${window.API_URL}/agendar`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(cita)
-        });
+    const data = await res.json();
 
-        const data = await res.json();
-
-        if (data.error) {
-            alert("❌ " + data.error);
-            return;
-        }
-
-        alert("✅ Cita agendada correctamente. Espera confirmación del salón.");
-        
-        document.getElementById("book-form").reset();
-        showView("appointments");
-        cargarCitas();
-    } catch (error) {
-        console.error("❌ Error al agendar:", error);
-        alert("❌ Error de conexión con el servidor");
+    if (data.error) {
+        alert("❌ " + data.error);
+        return;
     }
+
+    alert("✅ Cita agendada correctamente. Espera confirmación del salón.");
+    showView("appointments");
+    cargarCitas();
 }
 
 /* ============================================
@@ -467,31 +350,8 @@ function renderAppointments(telefono, appointments) {
     });
 }
 
-async function cargarCitas() {
-    if (!currentUser || !currentUser.phone) {
-        console.warn("No hay usuario logeado");
-        return;
-    }
-    
-    const telefono = currentUser.phone;
-    
-    try {
-        const resp = await fetch(`${window.API_URL}/citas_usuario/${telefono}`);
-        const data = await resp.json();
-        
-        if (!Array.isArray(data)) {
-            console.error("Error cargando citas:", data);
-            return;
-        }
-        
-        renderAppointments(telefono, data);
-    } catch (err) {
-        console.error("Error cargando citas:", err);
-    }
-}
-
 /* ============================================
-   ESTABLECER FECHA MÍNIMA
+   BLOQUEAR FECHAS Y CARGAR HORARIOS
 ============================================ */
 function establecerFechaMinima() {
     const inputFecha = document.getElementById("book-date");
@@ -507,6 +367,83 @@ function establecerFechaMinima() {
         inputFecha.min = `${yyyy}-${mm}-${dd}`;
     }
 }
+
+async function cargarHorariosDisponibles() {
+    const estilista = document.getElementById("estilista").value;
+    const fecha = document.getElementById("book-date").value;
+    const selectHora = document.getElementById("book-time");
+
+    if (!estilista || !fecha) {
+        return;
+    }
+
+    try {
+        // Obtener horarios bloqueados
+        const resBloqueados = await fetch(`${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`);
+        const bloqueados = await resBloqueados.json();
+
+        // Verificar si el día está completamente bloqueado
+        if (bloqueados.length > 0) {
+            selectHora.innerHTML = '<option value="">Este día no está disponible</option>';
+            selectHora.disabled = true;
+            return;
+        }
+
+        // Obtener horarios ocupados
+        const resOcupados = await fetch(`${window.API_URL}/horarios_ocupados/${estilista}/${fecha}`);
+        const ocupados = await resOcupados.json();
+
+        const todosHorarios = [
+            "09:00", "10:00", "11:00", "12:00", 
+            "13:00", "14:00", "15:00", "16:00", 
+            "17:00", "18:00"
+        ];
+
+        selectHora.innerHTML = '<option value="">Selecciona un horario</option>';
+        selectHora.disabled = false;
+
+        todosHorarios.forEach(hora => {
+            const horaFormato12 = convertirA12Horas(hora);
+            const estaOcupado = ocupados.includes(hora);
+            
+            const option = document.createElement("option");
+            option.value = horaFormato12;
+            option.textContent = horaFormato12 + (estaOcupado ? " (Ocupado)" : "");
+            option.disabled = estaOcupado;
+            
+            selectHora.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error("Error cargando horarios:", error);
+    }
+}
+
+function convertirA12Horas(hora24) {
+    const [horas, minutos] = hora24.split(':');
+    let h = parseInt(horas);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${String(h).padStart(2, '0')}:${minutos} ${ampm}`;
+}
+
+/* ============================================
+   EVENT LISTENERS
+============================================ */
+document.addEventListener("DOMContentLoaded", () => {
+    establecerFechaMinima();
+    
+    const estilistaSelectElem = document.getElementById("estilista");
+    const fechaInput = document.getElementById("book-date");
+    
+    if (estilistaSelectElem) {
+        estilistaSelectElem.addEventListener("change", cargarHorariosDisponibles);
+    }
+    
+    if (fechaInput) {
+        fechaInput.addEventListener("change", cargarHorariosDisponibles);
+    }
+});
 
 /* ============================================
    ADMIN
@@ -563,6 +500,8 @@ function initCarousel() {
     showSlide(slideIndex);
 }
 
+document.addEventListener("DOMContentLoaded", initCarousel);
+
 /* ============================
    VER MÁS / VER MENOS SERVICIOS
 ============================ */
@@ -606,6 +545,102 @@ function createShapes() {
     }
 }
 
+createShapes();
+
+cargarServicios();
+
+async function cargarCitas() {
+    if (!currentUser || !currentUser.phone) {
+        console.warn("No hay usuario logeado");
+        return;
+    }
+    
+    const telefono = currentUser.phone;
+    
+    try {
+        const resp = await fetch(`${window.API_URL}/citas_usuario/${telefono}`);
+        const data = await resp.json();
+        
+        if (!Array.isArray(data)) {
+            console.error("Error cargando citas:", data);
+            return;
+        }
+        
+        renderAppointments(telefono, data);
+    } catch (err) {
+        console.error("Error cargando citas:", err);
+    }
+}
+
+// Validación de formulario de agendar
+document.getElementById("book-form").addEventListener("submit", function (e) {
+    const telefono = document.getElementById("book-phone")?.value.trim() || "";
+    const nombre = document.getElementById("book-name")?.value.trim() || "";
+
+    if (nombre && !validarNombre(nombre)) {
+        e.preventDefault();
+        alert("❌ El nombre solo puede contener letras y máximo 20 caracteres.");
+        return;
+    }
+
+    if (telefono && !validarTelefono(telefono)) {
+        e.preventDefault();
+        alert("❌ El teléfono debe contener EXACTAMENTE 10 números.");
+        return;
+    }
+});
+
+// Solo números en teléfono
+document.getElementById("login-email").addEventListener("input", function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+});
+
+document.getElementById("register-email").addEventListener("input", function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+});
+
+// Solo letras en nombre
+document.getElementById("register-name").addEventListener("input", function () {
+    this.value = this.value
+        .replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
+        .slice(0, 20);
+});
+
+const vistaBook = document.getElementById("book");
+
+const observer = new MutationObserver(() => {
+    const visible = vistaBook.classList.contains("active") ||
+                    vistaBook.style.display === "block";
+
+    if (!visible) {
+        limpiarVistaAgendar();
+    }
+});
+
+observer.observe(vistaBook, {
+    attributes: true,
+    attributeFilter: ["class", "style"]
+});
+
+function limpiarVistaAgendar() {
+    const vista = document.getElementById("book");
+    if (!vista) return;
+
+    vista.querySelectorAll(
+        "input[type='text'], input[type='tel'], input[type='date'], input[type='time'], textarea"
+    ).forEach(campo => campo.value = "");
+
+    vista.querySelectorAll("select").forEach(select => {
+        select.selectedIndex = 0;
+    });
+
+    vista.querySelectorAll("input[type='radio'], input[type='checkbox']")
+        .forEach(c => c.checked = false);
+
+    vista.querySelectorAll(".active, .selected, .error, .success")
+        .forEach(el => el.classList.remove("active", "selected", "error", "success"));
+}
+
 const ADMIN_PHONE = "4775556666";
 
 function toggleAdminNavbar(phone) {
@@ -618,73 +653,6 @@ function toggleAdminNavbar(phone) {
     }
 }
 
-/* ============================================
-   🔥 INICIALIZACIÓN AL CARGAR LA PÁGINA
-============================================ */
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("🚀 Iniciando BeautyWeb...");
-    
-    // Configurar fecha mínima
-    establecerFechaMinima();
-    
-    // Cargar servicios y estilistas
-    cargarServicios();
-    cargarEstilistas();
-    
-    // Validaciones en tiempo real
-    const loginEmailInput = document.getElementById("login-email");
-    if (loginEmailInput) {
-        loginEmailInput.addEventListener("input", function() {
-            this.value = this.value.replace(/\D/g, '').slice(0, 10);
-        });
-    }
-
-    const registerEmailInput = document.getElementById("register-email");
-    if (registerEmailInput) {
-        registerEmailInput.addEventListener("input", function() {
-            this.value = this.value.replace(/\D/g, '').slice(0, 10);
-        });
-    }
-
-    const registerNameInput = document.getElementById("register-name");
-    if (registerNameInput) {
-        registerNameInput.addEventListener("input", function() {
-            this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "").slice(0, 25);
-        });
-    }
-
-    const bookNameInput = document.getElementById("book-name");
-    if (bookNameInput) {
-        bookNameInput.addEventListener("input", function() {
-            this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "").slice(0, 25);
-        });
-    }
-
-    const bookPhoneInput = document.getElementById("book-phone");
-    if (bookPhoneInput) {
-        bookPhoneInput.addEventListener("input", function() {
-            this.value = this.value.replace(/\D/g, '').slice(0, 10);
-        });
-    }
-
-    // 🔥 LISTENERS PARA CARGAR HORARIOS
-    const estilistaSelect = document.getElementById("estilista");
-    const fechaInput = document.getElementById("book-date");
-
-    if (estilistaSelect) {
-        estilistaSelect.addEventListener("change", cargarHorariosDisponibles);
-    }
-
-    if (fechaInput) {
-        fechaInput.addEventListener("change", cargarHorariosDisponibles);
-    }
-
-    // Inicializar carrusel y shapes
-    initCarousel();
-    createShapes();
-    
-    // Actualizar UI del usuario
+window.onload = () => {
     updateUserUI();
-    
-    console.log("✅ BeautyWeb iniciado correctamente");
-});
+};
