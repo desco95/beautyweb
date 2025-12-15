@@ -704,6 +704,37 @@ function limpiarVistaAgendar() {
         .forEach(el => el.classList.remove("active", "selected", "error", "success"));
 }
 
+//para ocultar admin
+const ADMIN_PHONE = "4775556666";
+
+function handleLogin() {
+    const phone = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-pass").value.trim();
+
+    // Aquí tu validación normal
+    if (!phone || !password) return;
+
+    // Guardar sesión
+    localStorage.setItem("userPhone", phone);
+
+    // Controlar acceso admin
+    toggleAdminNavbar(phone);
+
+    // Cerrar modal
+    document.getElementById("login-modal").style.display = "none";
+}
+
+document.getElementById("login-submit").addEventListener("click", handleLogin);
+
+function toggleAdminNavbar(phone) {
+    const adminBtn = document.getElementById("admin-btn");
+
+    if (phone === ADMIN_PHONE) {
+        adminBtn.style.display = "inline-flex"; // ideal para navbar
+    } else {
+        adminBtn.style.display = "none";
+    }
+}
 /* ============================================================
 FIN
 ==============================*/
