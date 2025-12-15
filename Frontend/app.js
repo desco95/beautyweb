@@ -1,5 +1,5 @@
 /* =========================================================
-   BEAUTYWEB - APP.JS COMPLETO CON VALIDACIONES MEJORADAS
+   BEAUTYWEB - APP.JS MEJORADO
 ========================================================= */
 
 localStorage.removeItem("currentUser");
@@ -43,7 +43,7 @@ function validarTelefono(telefono) {
 }
 
 function validarNombre(nombre) {
-    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,20}$/.test(nombre);
+    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,25}$/.test(nombre);
 }
 
 function validarContrasena(contrasena) {
