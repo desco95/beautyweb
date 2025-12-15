@@ -1,5 +1,5 @@
 /* =========================================================
-   BEAUTYWEB - APP.JS MEJORADO
+   BEAUTYWEB - APP.JS CORREGIDO
 ========================================================= */
 
 localStorage.removeItem("currentUser");
@@ -279,8 +279,8 @@ servicioSelect.addEventListener("change", async () => {
     }
 });
 
-// Al seleccionar estilista, habilitar fecha
-estilistaSelect.addEventListener("change", () => {
+// Al seleccionar estilista, habilitar fecha y aplicar bloqueos
+estilistaSelect.addEventListener("change", async () => {
     const estilistaId = estilistaSelect.value;
     
     if (estilistaId) {
@@ -288,12 +288,108 @@ estilistaSelect.addEventListener("change", () => {
         fechaInput.value = "";
         horaSelect.disabled = true;
         horaSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+        
+        // Aplicar bloqueos de fechas
+        await aplicarBloqueosFechas();
     } else {
         fechaInput.disabled = true;
         fechaInput.value = "";
         horaSelect.disabled = true;
     }
 });
+
+/* ============================================
+   🔥 BLOQUEAR FECHAS EN EL CALENDARIO
+============================================ */
+async function aplicarBloqueosFechas() {
+    const estilista = estilistaSelect.value;
+    
+    if (!estilista) return;
+
+    try {
+        const res = await fetch(`${window.API_URL}/bloqueos/${estilista}`);
+        const bloqueos = await res.json();
+        
+        const fechasBloqueadas = bloqueos.map(b => b.fecha);
+        
+        // Remover listeners previos
+        const nuevoInput = fechaInput.cloneNode(true);
+        fechaInput.parentNode.replaceChild(nuevoInput, fechaInput);
+        
+        // Actualizar referencia
+        const fechaInputActualizado = document.getElementById("book-date");
+        
+        // Validar fecha seleccionada
+        fechaInputActualizado.addEventListener("input", function() {
+            const fechaSeleccionada = this.value;
+            
+            if (fechasBloqueadas.includes(fechaSeleccionada)) {
+                alert("⚠️ Esta fecha no está disponible para este estilista. Por favor selecciona otra fecha.");
+                this.value = "";
+                horaSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+                horaSelect.disabled = true;
+            } else {
+                cargarHorariosDisponibles();
+            }
+        });
+        
+    } catch (error) {
+        console.error("Error cargando bloqueos:", error);
+    }
+}
+
+/* ============================================
+   🔥 CARGAR HORARIOS DISPONIBLES (CORREGIDO)
+============================================ */
+async function cargarHorariosDisponibles() {
+    const estilista = estilistaSelect.value;
+    const fecha = document.getElementById("book-date").value;
+    const selectHora = horaSelect;
+
+    if (!estilista || !fecha) {
+        return;
+    }
+
+    try {
+        // Verificar si el día está bloqueado
+        const resBloqueados = await fetch(`${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`);
+        const bloqueados = await resBloqueados.json();
+
+        if (bloqueados.length > 0) {
+            selectHora.innerHTML = '<option value="">Este día no está disponible</option>';
+            selectHora.disabled = true;
+            return;
+        }
+
+        // Obtener horarios ocupados
+        const resOcupados = await fetch(`${window.API_URL}/horarios_ocupados/${estilista}/${fecha}`);
+        const ocupados = await resOcupados.json();
+
+        const todosHorarios = [
+            "09:00", "10:00", "11:00", "12:00", 
+            "13:00", "14:00", "15:00", "16:00", 
+            "17:00", "18:00"
+        ];
+
+        selectHora.innerHTML = '<option value="">Selecciona un horario</option>';
+        selectHora.disabled = false;
+
+        todosHorarios.forEach(hora => {
+            const horaFormato12 = convertirA12Horas(hora);
+            const estaOcupado = ocupados.includes(hora);
+            
+            const option = document.createElement("option");
+            option.value = horaFormato12;
+            option.textContent = horaFormato12 + (estaOcupado ? " (Ocupado)" : "");
+            option.disabled = estaOcupado;
+            
+            selectHora.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error("Error cargando horarios:", error);
+    }
+}
 
 /* ============================================
    AGENDAR CITA CON VALIDACIONES
@@ -306,9 +402,22 @@ async function bookAppointment(event) {
         return;
     }
 
+    const nombre = document.getElementById("book-name").value.trim();
+    const telefono = document.getElementById("book-phone").value.trim();
     const fecha = document.getElementById("book-date").value;
     const hora = document.getElementById("book-time").value;
     const estilista = document.getElementById("estilista").value;
+
+    // Validaciones
+    if (!validarNombre(nombre)) {
+        alert("❌ El nombre solo debe contener letras y espacios");
+        return;
+    }
+
+    if (!validarTelefono(telefono)) {
+        alert("❌ El teléfono debe tener exactamente 10 dígitos");
+        return;
+    }
 
     const fechaSeleccionada = new Date(fecha);
     const hoy = new Date();
@@ -381,7 +490,7 @@ function renderAppointments(telefono, appointments) {
 }
 
 /* ============================================
-   BLOQUEAR FECHAS Y CARGAR HORARIOS CON DÍAS BLOQUEADOS
+   ESTABLECER FECHA MÍNIMA
 ============================================ */
 function establecerFechaMinima() {
     const inputFecha = document.getElementById("book-date");
@@ -397,108 +506,6 @@ function establecerFechaMinima() {
         inputFecha.min = `${yyyy}-${mm}-${dd}`;
     }
 }
-
-async function cargarHorariosDisponibles() {
-    const estilista = document.getElementById("estilista").value;
-    const fecha = document.getElementById("book-date").value;
-    const selectHora = document.getElementById("book-time");
-
-    if (!estilista || !fecha) {
-        return;
-    }
-
-    try {
-        // Verificar si el día está bloqueado
-        const resBloqueados = await fetch(`${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`);
-        const bloqueados = await resBloqueados.json();
-
-        if (bloqueados.length > 0) {
-            selectHora.innerHTML = '<option value="">Este día no está disponible</option>';
-            selectHora.disabled = true;
-            return;
-        }
-
-        // Obtener horarios ocupados
-        const resOcupados = await fetch(`${window.API_URL}/horarios_ocupados/${estilista}/${fecha}`);
-        const ocupados = await resOcupados.json();
-
-        const todosHorarios = [
-            "09:00", "10:00", "11:00", "12:00", 
-            "13:00", "14:00", "15:00", "16:00", 
-            "17:00", "18:00"
-        ];
-
-        selectHora.innerHTML = '<option value="">Selecciona un horario</option>';
-        selectHora.disabled = false;
-
-        todosHorarios.forEach(hora => {
-            const horaFormato12 = convertirA12Horas(hora);
-            const estaOcupado = ocupados.includes(hora);
-            
-            const option = document.createElement("option");
-            option.value = horaFormato12;
-            option.textContent = horaFormato12 + (estaOcupado ? " (Ocupado)" : "");
-            option.disabled = estaOcupado;
-            
-            selectHora.appendChild(option);
-        });
-
-    } catch (error) {
-        console.error("Error cargando horarios:", error);
-    }
-}
-
-// Deshabilitar fechas bloqueadas en el calendario
-async function aplicarBloqueosFechas() {
-    const estilista = document.getElementById("estilista").value;
-    const fechaInput = document.getElementById("book-date");
-    
-    if (!estilista) return;
-
-    try {
-        // Obtener todas las fechas bloqueadas del estilista
-        const res = await fetch(`${window.API_URL}/bloqueos/${estilista}`);
-        const bloqueos = await res.json();
-        
-        const fechasBloqueadas = bloqueos.map(b => b.fecha);
-        
-        // Crear un listener para validar la fecha seleccionada
-        fechaInput.addEventListener("input", function() {
-            const fechaSeleccionada = this.value;
-            
-            if (fechasBloqueadas.includes(fechaSeleccionada)) {
-                alert("⚠️ Esta fecha no está disponible para este estilista");
-                this.value = "";
-                document.getElementById("book-time").innerHTML = '<option value="">Selecciona un horario</option>';
-                document.getElementById("book-time").disabled = true;
-            }
-        });
-        
-    } catch (error) {
-        console.error("Error cargando bloqueos:", error);
-    }
-}
-
-// Actualizar el listener del estilista para aplicar bloqueos
-document.addEventListener("DOMContentLoaded", () => {
-    establecerFechaMinima();
-    
-    const estilistaSelectElem = document.getElementById("estilista");
-    const fechaInput = document.getElementById("book-date");
-    
-    if (estilistaSelectElem) {
-        estilistaSelectElem.addEventListener("change", () => {
-            if (estilistaSelectElem.value) {
-                aplicarBloqueosFechas();
-            }
-            cargarHorariosDisponibles();
-        });
-    }
-    
-    if (fechaInput) {
-        fechaInput.addEventListener("change", cargarHorariosDisponibles);
-    }
-});
 
 function convertirA12Horas(hora24) {
     const [horas, minutos] = hora24.split(':');
@@ -635,38 +642,50 @@ async function cargarCitas() {
     }
 }
 
-// Validación de formulario de agendar
-document.getElementById("book-form").addEventListener("submit", function (e) {
-    const telefono = document.getElementById("book-phone")?.value.trim() || "";
-    const nombre = document.getElementById("book-name")?.value.trim() || "";
+/* ============================================
+   🔥 VALIDACIONES EN TIEMPO REAL
+============================================ */
+document.addEventListener("DOMContentLoaded", () => {
+    establecerFechaMinima();
 
-    if (nombre && !validarNombre(nombre)) {
-        e.preventDefault();
-        alert("❌ El nombre solo puede contener letras y máximo 20 caracteres.");
-        return;
+    // Solo números en teléfono (login)
+    const loginEmailInput = document.getElementById("login-email");
+    if (loginEmailInput) {
+        loginEmailInput.addEventListener("input", function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
     }
 
-    if (telefono && !validarTelefono(telefono)) {
-        e.preventDefault();
-        alert("❌ El teléfono debe contener EXACTAMENTE 10 números.");
-        return;
+    // Solo números en teléfono (registro)
+    const registerEmailInput = document.getElementById("register-email");
+    if (registerEmailInput) {
+        registerEmailInput.addEventListener("input", function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
     }
-});
 
-// Solo números en teléfono
-document.getElementById("login-email").addEventListener("input", function() {
-    this.value = this.value.replace(/\D/g, '').slice(0, 10);
-});
+    // Solo letras en nombre (registro)
+    const registerNameInput = document.getElementById("register-name");
+    if (registerNameInput) {
+        registerNameInput.addEventListener("input", function() {
+            this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "").slice(0, 25);
+        });
+    }
 
-document.getElementById("register-email").addEventListener("input", function() {
-    this.value = this.value.replace(/\D/g, '').slice(0, 10);
-});
+    // 🔥 VALIDACIONES EN FORMULARIO DE AGENDAR CITA
+    const bookNameInput = document.getElementById("book-name");
+    if (bookNameInput) {
+        bookNameInput.addEventListener("input", function() {
+            this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "").slice(0, 25);
+        });
+    }
 
-// Solo letras en nombre
-document.getElementById("register-name").addEventListener("input", function () {
-    this.value = this.value
-        .replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
-        .slice(0, 25);
+    const bookPhoneInput = document.getElementById("book-phone");
+    if (bookPhoneInput) {
+        bookPhoneInput.addEventListener("input", function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+    }
 });
 
 const vistaBook = document.getElementById("book");
