@@ -372,6 +372,8 @@ async function cargarHorariosDisponibles() {
     const estilista = document.getElementById("estilista").value;
     const fecha = document.getElementById("book-date").value;
     const selectHora = document.getElementById("book-time");
+    const inputFecha = document.getElementById("book-date");
+    const mensajeBloqueado = document.getElementById("mensaje-bloqueado");
 
     if (!estilista || !fecha) {
         return;
@@ -386,7 +388,20 @@ async function cargarHorariosDisponibles() {
         if (bloqueados.length > 0) {
             selectHora.innerHTML = '<option value="">Este día no está disponible</option>';
             selectHora.disabled = true;
+            
+            // Mostrar visualmente que está bloqueado
+            inputFecha.classList.add("fecha-bloqueada");
+            if (mensajeBloqueado) {
+                mensajeBloqueado.classList.add("show");
+            }
+            
             return;
+        } else {
+            // Quitar indicadores de bloqueo
+            inputFecha.classList.remove("fecha-bloqueada");
+            if (mensajeBloqueado) {
+                mensajeBloqueado.classList.remove("show");
+            }
         }
 
         // Obtener horarios ocupados
