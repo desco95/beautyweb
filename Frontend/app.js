@@ -429,7 +429,7 @@ function convertirA12Horas(hora24) {
 }
 
 /* ============================================
-   AGENDAR CITA CON VALIDACIONES
+   AGENDAR CITA (VERIFICADO)
 ============================================ */
 async function bookAppointment(event) {
     event.preventDefault();
@@ -441,11 +441,34 @@ async function bookAppointment(event) {
 
     const nombre = document.getElementById("book-name").value.trim();
     const telefono = document.getElementById("book-phone").value.trim();
-    const fecha = document.getElementById("book-date").value;
-    const hora = document.getElementById("book-time").value;
+    const servicio = document.getElementById("servicio1").value;
     const estilista = document.getElementById("estilista").value;
+    const fecha = document.getElementById("book-date").value;
+    const hora = document.getElementById("book-time").value; // Ya está en formato 24h
+
+    console.log("📝 Datos de la cita:", { nombre, telefono, servicio, estilista, fecha, hora });
 
     // Validaciones
+    if (!servicio) {
+        alert("❌ Selecciona un servicio");
+        return;
+    }
+
+    if (!estilista) {
+        alert("❌ Selecciona un estilista");
+        return;
+    }
+
+    if (!fecha) {
+        alert("❌ Selecciona una fecha");
+        return;
+    }
+
+    if (!hora) {
+        alert("❌ Selecciona un horario");
+        return;
+    }
+
     if (!validarNombre(nombre)) {
         alert("❌ El nombre solo debe contener letras y espacios");
         return;
@@ -467,31 +490,45 @@ async function bookAppointment(event) {
 
     const cita = {
         usuario_id: currentUser.id,
-        servicio: document.getElementById("servicio1").value,
-        estilista: estilista,
+        servicio: servicio,
+        estilista: parseInt(estilista),
         fecha: fecha,
-        hora: hora,
-        notas: document.getElementById("book-notes").value,
+        hora: hora, // Formato 24h: "14:00"
+        notas: document.getElementById("book-notes").value
     };
 
-    const res = await fetch(`${window.API_URL}/agendar`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cita)
-    });
+    console.log("🚀 Enviando cita:", cita);
 
-    const data = await res.json();
+    try {
+        const res = await fetch(`${window.API_URL}/agendar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cita)
+        });
 
-    if (data.error) {
-        alert("❌ " + data.error);
-        return;
+        const data = await res.json();
+
+        if (data.error) {
+            alert("❌ " + data.error);
+            return;
+        }
+
+        alert("✅ Cita agendada correctamente. Espera confirmación del salón.");
+        
+        // Limpiar formulario
+        document.getElementById("book-form").reset();
+        document.getElementById("servicio1").selectedIndex = 0;
+        document.getElementById("estilista").disabled = true;
+        document.getElementById("book-date").disabled = true;
+        document.getElementById("book-time").disabled = true;
+        
+        showView("appointments");
+        cargarCitas();
+    } catch (error) {
+        console.error("❌ Error al agendar:", error);
+        alert("❌ Error de conexión con el servidor");
     }
-
-    alert("✅ Cita agendada correctamente. Espera confirmación del salón.");
-    showView("appointments");
-    cargarCitas();
 }
-
 /* ============================================
    RENDERIZAR CITAS
 ============================================ */
