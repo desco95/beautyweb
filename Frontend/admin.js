@@ -34,7 +34,7 @@ showAdminView("inicio");
 let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
 
 /* ==========================
-   PENDING + CONFIRMED APPOINTMENTS CON INFO DESPLEGABLE Y RANGO DE FECHAS
+   PENDING + CONFIRMED APPOINTMENTS CON INFO DESPLEGABLE
 ========================== */
 async function loadPendingAppointments() {
     const pendingContainer = document.getElementById("pending-list");
@@ -57,17 +57,8 @@ async function loadPendingAppointments() {
             return;
         }
 
-        // Filtrar solo fechas desde hoy en adelante
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
-        
-        const citasFuturas = citas.filter(c => {
-            const fechaCita = new Date(c.fecha);
-            return fechaCita >= hoy;
-        });
-
-        const pendientes = citasFuturas.filter(c => c.estado === "Pendiente");
-        const confirmadas = citasFuturas.filter(c => c.estado === "Confirmada");
+        const pendientes = citas.filter(c => c.estado === "Pendiente");
+        const confirmadas = citas.filter(c => c.estado === "Confirmada");
 
         // ===== PENDIENTES CON TRIÁNGULO DESPLEGABLE =====
         const pendientesPorMes = {};
@@ -89,6 +80,7 @@ async function loadPendingAppointments() {
                 card.classList.add("appointment-card");
                 card.style.cursor = "pointer";
 
+                // Resumen compacto con triángulo
                 card.innerHTML = `
                     <div class="card-summary" style="display: flex; align-items: center; gap: 10px;">
                         <span class="triangle" style="font-size: 18px; transition: transform 0.3s;">▶</span>
@@ -105,6 +97,7 @@ async function loadPendingAppointments() {
                     </div>
                 `;
 
+                // Toggle detalles al hacer clic
                 const summary = card.querySelector(".card-summary");
                 const details = card.querySelector(".card-details");
                 const triangle = card.querySelector(".triangle");
@@ -115,6 +108,7 @@ async function loadPendingAppointments() {
                     triangle.style.transform = isHidden ? "rotate(90deg)" : "rotate(0deg)";
                 });
 
+                // Botones para confirmar/rechazar
                 const actions = document.createElement("div");
                 actions.classList.add("card-actions");
                 actions.style.marginTop = "15px";
@@ -142,35 +136,20 @@ async function loadPendingAppointments() {
             });
         });
 
-        // ===== CONFIRMADAS CON ORDEN, FILTRO Y RANGO DE FECHAS =====
+        // ===== CONFIRMADAS CON ORDEN Y FILTRO =====
         if (confirmadas.length > 0) {
+            // Controles de ordenamiento
             const controlsDiv = document.createElement("div");
             controlsDiv.style.marginBottom = "15px";
             controlsDiv.style.display = "flex";
-            controlsDiv.style.flexDirection = "column";
-            controlsDiv.style.gap = "15px";
-
+            controlsDiv.style.gap = "10px";
             controlsDiv.innerHTML = `
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="orden-fecha" class="btn-orden active-orden" style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ddd; background: #ff4fa1; color: white; cursor: pointer;">
-                        Por fecha y hora
-                    </button>
-                    <button id="orden-reciente" class="btn-orden" style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ddd; background: white; color: #333; cursor: pointer;">
-                        Última confirmada
-                    </button>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <label style="font-weight: 600;">Filtrar por rango:</label>
-                    <input type="date" id="fecha-desde" style="padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                    <span>a</span>
-                    <input type="date" id="fecha-hasta" style="padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                    <button id="aplicar-filtro" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                        Aplicar
-                    </button>
-                    <button id="limpiar-filtro" style="padding: 8px 15px; background: #999; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                        Limpiar
-                    </button>
-                </div>
+                <button id="orden-fecha" class="btn-orden active-orden" style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ddd; background: #ff4fa1; color: white; cursor: pointer;">
+                    Por fecha y hora
+                </button>
+                <button id="orden-reciente" class="btn-orden" style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ddd; background: white; color: #333; cursor: pointer;">
+                    Última confirmada
+                </button>
             `;
             confirmedContainer.appendChild(controlsDiv);
 
@@ -178,10 +157,9 @@ async function loadPendingAppointments() {
             listaConfirmadas.id = "lista-confirmadas";
             confirmedContainer.appendChild(listaConfirmadas);
 
-            let citasFiltradas = [...confirmadas];
-
+            // Función para renderizar confirmadas
             function renderConfirmadas(orden) {
-                let citasOrdenadas = [...citasFiltradas];
+                let citasOrdenadas = [...confirmadas];
                 
                 if (orden === "fecha") {
                     citasOrdenadas.sort((a, b) => {
@@ -190,51 +168,34 @@ async function loadPendingAppointments() {
                         return fechaA - fechaB;
                     });
                 } else {
+                    // Orden inverso (últimas confirmadas primero)
                     citasOrdenadas.reverse();
                 }
 
                 listaConfirmadas.innerHTML = "";
-                
-                if (citasOrdenadas.length === 0) {
-                    listaConfirmadas.innerHTML = "<p>No hay citas en el rango seleccionado</p>";
-                    return;
-                }
-
                 citasOrdenadas.forEach(cita => {
                     const card = document.createElement("div");
                     card.classList.add("appointment-card");
-                    card.style.cursor = "pointer";
 
                     card.innerHTML = `
-                        <div class="card-summary" style="display: flex; align-items: center; gap: 10px;">
-                            <span class="triangle" style="font-size: 18px; transition: transform 0.3s;">▶</span>
-                            <div style="flex: 1;">
-                                <strong>${cita.servicio}</strong>
-                                <span class="status confirmada" style="float: right;">Confirmada</span><br>
-                                <span style="color: #666;">Cliente: ${cita.cliente} | Fecha: ${cita.fecha}</span>
-                            </div>
+                        <div class="card-header">
+                            <h3>${cita.servicio}</h3>
+                            <span class="status confirmada">Confirmada</span>
                         </div>
-                        <div class="card-details" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                        <div class="card-body">
+                            <p><strong>Cliente:</strong> ${cita.cliente}</p>
                             <p><strong>Teléfono:</strong> ${cita.telefono}</p>
                             <p><strong>Estilista:</strong> ${cita.estilista}</p>
+                            <p><strong>Fecha:</strong> ${cita.fecha}</p>
                             <p><strong>Hora:</strong> ${cita.hora}</p>
                         </div>
                     `;
-
-                    const summary = card.querySelector(".card-summary");
-                    const details = card.querySelector(".card-details");
-                    const triangle = card.querySelector(".triangle");
-
-                    summary.addEventListener("click", () => {
-                        const isHidden = details.style.display === "none";
-                        details.style.display = isHidden ? "block" : "none";
-                        triangle.style.transform = isHidden ? "rotate(90deg)" : "rotate(0deg)";
-                    });
 
                     listaConfirmadas.appendChild(card);
                 });
             }
 
+            // Event listeners para botones de orden
             document.getElementById("orden-fecha").addEventListener("click", function() {
                 renderConfirmadas("fecha");
                 document.querySelectorAll(".btn-orden").forEach(b => {
@@ -255,33 +216,7 @@ async function loadPendingAppointments() {
                 this.style.color = "white";
             });
 
-            document.getElementById("aplicar-filtro").addEventListener("click", function() {
-                const desde = document.getElementById("fecha-desde").value;
-                const hasta = document.getElementById("fecha-hasta").value;
-
-                if (!desde || !hasta) {
-                    alert("Selecciona ambas fechas");
-                    return;
-                }
-
-                const fechaDesde = new Date(desde);
-                const fechaHasta = new Date(hasta);
-
-                citasFiltradas = confirmadas.filter(c => {
-                    const fechaCita = new Date(c.fecha);
-                    return fechaCita >= fechaDesde && fechaCita <= fechaHasta;
-                });
-
-                renderConfirmadas("fecha");
-            });
-
-            document.getElementById("limpiar-filtro").addEventListener("click", function() {
-                document.getElementById("fecha-desde").value = "";
-                document.getElementById("fecha-hasta").value = "";
-                citasFiltradas = [...confirmadas];
-                renderConfirmadas("fecha");
-            });
-
+            // Renderizar por defecto
             renderConfirmadas("fecha");
         }
 
