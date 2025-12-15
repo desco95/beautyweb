@@ -268,8 +268,11 @@ async function cargarHorariosDisponibles() {
     const estilista = estilistaSelect.value;
     const fecha = fechaInput.value;
 
-    console.log("🔍 Intentando cargar horarios:", { estilista, fecha });
+    console.log("🔍 Cargando horarios para:", { estilista, fecha });
 
+    // Resetear el select
+    horaSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+    
     if (!estilista || !fecha) {
         horaSelect.innerHTML = '<option value="">Primero selecciona estilista y fecha</option>';
         return;
@@ -280,7 +283,9 @@ async function cargarHorariosDisponibles() {
         const resBloqueados = await fetch(`${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`);
         const bloqueados = await resBloqueados.json();
 
-        if (bloqueados.length > 0) {
+        console.log("🚫 Días bloqueados:", bloqueados);
+
+        if (Array.isArray(bloqueados) && bloqueados.length > 0) {
             horaSelect.innerHTML = '<option value="">Este día no está disponible</option>';
             alert("⚠️ Este día no está disponible para este estilista");
             return;
@@ -298,13 +303,11 @@ async function cargarHorariosDisponibles() {
             "17:00", "18:00"
         ];
 
-        horaSelect.innerHTML = '<option value="">Selecciona un horario</option>';
-
         let disponibles = 0;
 
         todosHorarios.forEach(hora24 => {
             const hora12 = convertirA12Horas(hora24);
-            const estaOcupado = ocupados.includes(hora24);
+            const estaOcupado = ocupados.some(h => h.startsWith(hora24));
             
             const option = document.createElement("option");
             option.value = hora24;
@@ -316,15 +319,16 @@ async function cargarHorariosDisponibles() {
             horaSelect.appendChild(option);
         });
 
-        console.log(`✅ ${disponibles} horarios disponibles`);
+        console.log(`✅ ${disponibles} horarios disponibles de ${todosHorarios.length}`);
 
         if (disponibles === 0) {
-            horaSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
+            horaSelect.innerHTML = '<option value="">No hay horarios disponibles este día</option>';
         }
 
     } catch (error) {
         console.error("❌ Error cargando horarios:", error);
         horaSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
+        alert("Error al cargar horarios disponibles. Intenta de nuevo.");
     }
 }
 
