@@ -310,8 +310,8 @@ async function cargarHorariosDisponibles() {
             const estaOcupado = ocupados.some(h => h.startsWith(hora24));
             
             const option = document.createElement("option");
-            option.value = hora24;
-            option.textContent = hora12 + (estaOcupado ? " (Ocupado)" : "");
+            option.value = hora24; // Valor en 24h para el backend
+            option.textContent = hora12 + (estaOcupado ? " (Ocupado)" : ""); // Texto en 12h
             option.disabled = estaOcupado;
             
             if (!estaOcupado) disponibles++;
@@ -330,6 +330,14 @@ async function cargarHorariosDisponibles() {
         horaSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
         alert("Error al cargar horarios disponibles. Intenta de nuevo.");
     }
+}
+
+function convertirA12Horas(hora24) {
+    const [horas, minutos] = hora24.split(':');
+    let h = parseInt(horas);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${String(h).padStart(2, '0')}:${minutos} ${ampm}`;
 }
 
 function convertirA12Horas(hora24) {
