@@ -339,30 +339,31 @@ async function aplicarBloqueosFechas() {
 }
 
 /* ============================================
-   🔥 CARGAR HORARIOS DISPONIBLES (CORREGIDO)
+   🔥 CARGAR HORARIOS DISPONIBLES (ARREGLADO)
 ============================================ */
 async function cargarHorariosDisponibles() {
     const estilista = document.getElementById("estilista").value;
     const fecha = document.getElementById("book-date").value;
     const selectHora = document.getElementById("book-time");
 
-    console.log("Cargando horarios para:", { estilista, fecha });
+    console.log("🔍 Cargando horarios para:", { estilista, fecha });
 
     if (!estilista || !fecha) {
-        console.log("Falta estilista o fecha");
+        console.log("⚠️ Falta estilista o fecha");
         return;
     }
 
     try {
-        // Verificar si el día está bloqueado
+        // Verificar si el día está bloqueado completamente
         const resBloqueados = await fetch(`${window.API_URL}/horarios_bloqueados/${estilista}/${fecha}`);
         const bloqueados = await resBloqueados.json();
 
-        console.log("Bloqueados:", bloqueados);
+        console.log("🚫 Bloqueados:", bloqueados);
 
         if (bloqueados.length > 0) {
             selectHora.innerHTML = '<option value="">Este día no está disponible</option>';
             selectHora.disabled = true;
+            alert("⚠️ Este día no está disponible");
             return;
         }
 
@@ -370,8 +371,9 @@ async function cargarHorariosDisponibles() {
         const resOcupados = await fetch(`${window.API_URL}/horarios_ocupados/${estilista}/${fecha}`);
         const ocupados = await resOcupados.json();
 
-        console.log("Ocupados:", ocupados);
+        console.log("📋 Ocupados (del servidor):", ocupados);
 
+        // Horarios disponibles en formato 24h
         const todosHorarios = [
             "09:00", "10:00", "11:00", "12:00", 
             "13:00", "14:00", "15:00", "16:00", 
@@ -381,24 +383,49 @@ async function cargarHorariosDisponibles() {
         selectHora.innerHTML = '<option value="">Selecciona un horario</option>';
         selectHora.disabled = false;
 
-        todosHorarios.forEach(hora => {
-            const horaFormato12 = convertirA12Horas(hora);
-            const estaOcupado = ocupados.includes(hora);
+        let horariosDisponibles = 0;
+
+        todosHorarios.forEach(hora24 => {
+            // Convertir a formato 12 horas para mostrar
+            const hora12 = convertirA12Horas(hora24);
+            
+            // Verificar si está ocupado (comparar en formato 24h)
+            const estaOcupado = ocupados.includes(hora24);
             
             const option = document.createElement("option");
-            option.value = horaFormato12;
-            option.textContent = horaFormato12 + (estaOcupado ? " (Ocupado)" : "");
+            option.value = hora24; // 🔥 GUARDAR EN FORMATO 24H
+            option.textContent = hora12 + (estaOcupado ? " (Ocupado)" : "");
             option.disabled = estaOcupado;
+            
+            if (!estaOcupado) horariosDisponibles++;
             
             selectHora.appendChild(option);
         });
 
-        console.log("Horarios cargados exitosamente");
+        console.log(`✅ ${horariosDisponibles} horarios disponibles cargados`);
+
+        if (horariosDisponibles === 0) {
+            selectHora.innerHTML = '<option value="">No hay horarios disponibles</option>';
+            selectHora.disabled = true;
+        }
 
     } catch (error) {
-        console.error("Error cargando horarios:", error);
+        console.error("❌ Error cargando horarios:", error);
         alert("Error al cargar los horarios disponibles");
+        selectHora.innerHTML = '<option value="">Error al cargar horarios</option>';
+        selectHora.disabled = true;
     }
+}
+
+/* ============================================
+   CONVERTIR HORA 24H A 12H
+============================================ */
+function convertirA12Horas(hora24) {
+    const [horas, minutos] = hora24.split(':');
+    let h = parseInt(horas);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12; // 0 se convierte en 12
+    return `${String(h).padStart(2, '0')}:${minutos} ${ampm}`;
 }
 
 /* ============================================
