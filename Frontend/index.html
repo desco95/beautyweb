@@ -200,11 +200,11 @@
                     <div class="grid-2">
                         <div class="form-group">
                             <label>Nombre:</label>
-                            <input id="book-name" type="text" required>
+                            <input id="book-name" type="text" required maxlength="25" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo se permiten letras y espacios">
                         </div>
                         <div class="form-group">
                             <label>Teléfono:</label>
-                            <input id="book-phone" type="tel" required pattern="[0-9]{1,10}" maxlength="10" inputmode="numeric" >
+                            <input id="book-phone" type="tel" required pattern="[0-9]{10}" maxlength="10" inputmode="numeric" title="Debe contener exactamente 10 dígitos">
                         </div>
                     </div>
 
